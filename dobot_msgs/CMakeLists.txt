@@ -16,11 +16,15 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "action/ArcMotion.action"
+  "action/DrawCircle.action"
   "action/PointToPoint.action"
   "action/SlidingRail.action"
   "msg/DobotAlarmCodes.msg"
   "msg/GripperStatus.msg"
+  "srv/EvaluateArcTrajectory.srv"
   "srv/EvaluatePTPTrajectory.srv"
+  "srv/ExecuteAutoLevelingProcedure.srv"
   "srv/ExecuteHomingProcedure.srv"
   "srv/GripperControl.srv"
   "srv/SuctionCupControl.srv"

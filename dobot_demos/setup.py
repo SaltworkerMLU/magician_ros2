@@ -1,4 +1,6 @@
 from setuptools import setup
+import os
+from glob import glob
 
 package_name = 'dobot_demos'
 
@@ -10,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,6 +24,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'test_arc = dobot_demos.Arc_client:main',
+            'test_auto_leveling = dobot_demos.auto_leveling_client:main',
+            'test_draw_circle = dobot_demos.draw_circle:main',
             'test_gripper = dobot_demos.gripper_client:main',
             'test_homing = dobot_demos.homing_client:main',
             'test_point_to_point = dobot_demos.PTP_client:main',

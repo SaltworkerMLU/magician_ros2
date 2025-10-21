@@ -1,0 +1,1 @@
+rqt --force-discover --clear-config -s dobot_menu

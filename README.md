@@ -133,6 +133,11 @@ An example of a command that allows you to send a goal to an action server can b
 ```
 ros2 action send_goal /PTP_action  dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
 ```
+Try running the Arc motion using:
+```
+ros2 action send_goal /Arc_action  dobot_msgs/action/ArcMotion "{circumference_point: [175.0, 25.0, 100.0, 0.0], ending_point: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
+```
+
 If you want to cancel the goal, run the following command:
 ```
 ros2 service call /PTP_action/_action/cancel_goal action_msgs/srv/CancelGoal

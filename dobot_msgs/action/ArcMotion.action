@@ -1,0 +1,11 @@
+#goal definition
+float64[4] circumference_point
+float64[4] ending_point
+float64 velocity_ratio 1.0
+float64 acceleration_ratio 1.0
+---
+#result definition
+float64[4] achieved_pose
+---
+#feedback definition
+float64[4] current_pose

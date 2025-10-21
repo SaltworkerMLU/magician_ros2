@@ -1,4 +1,4 @@
-from dobot_msgs.srv import ExecuteHomingProcedure
+from dobot_msgs.srv import ExecuteHomingProcedure, ExecuteAutoLevelingProcedure
 import rclpy
 from rclpy.node import Node
 
@@ -12,9 +12,9 @@ class HomingClient(Node):
             self.get_logger().info('service not available, waiting again...')
         self.req = ExecuteHomingProcedure.Request()
 
-
     def send_request(self):
         self.future = self.cli.call_async(self.req)
+        self.get_logger().info("The homing procedure has started. Please wait until the arm stops moving and the led stops flashing blue.")
         rclpy.spin_until_future_complete(self, self.future)
         return self.future.result()
 
@@ -24,7 +24,6 @@ def main(args=None):
 
     minimal_client = HomingClient()
     response = minimal_client.send_request()
-    minimal_client.get_logger().info(response.instruction)
     minimal_client.destroy_node()
     rclpy.shutdown()
 
