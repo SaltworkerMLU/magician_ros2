@@ -1,4 +1,0 @@
-/dobot_draw_circle:
-  ros__parameters:
-    position: [175.0, 100.0, -74.0]
-    radius: 25.0

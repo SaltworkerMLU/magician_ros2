@@ -1,1 +1,0 @@
-ros2 launch dobot_description display.launch.py DOF:=3 tool:=none use_camera:=false

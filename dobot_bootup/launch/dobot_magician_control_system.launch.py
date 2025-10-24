@@ -116,6 +116,24 @@ def generate_launch_description():
         condition = IfCondition(PythonExpression(valid_tool))
     )
 
+    CP_action =ExecuteProcess(
+        cmd=[[
+            'ros2 ', 'launch ', 'dobot_nodes ', 'dobot_CP.launch.py'
+        ]],
+        shell=True,
+        output='screen',
+        condition = IfCondition(PythonExpression(valid_tool))
+    )
+
+    draw_circle =ExecuteProcess(
+        cmd=[[
+            'ros2 ', 'launch ', 'dobot_nodes ', 'draw_circle.launch.py'
+        ]],
+        shell=True,
+        output='screen',
+        condition = IfCondition(PythonExpression(valid_tool))
+    )
+
     robot_state = Node(
         package='dobot_nodes',
         executable='state_publisher',
@@ -123,9 +141,9 @@ def generate_launch_description():
         condition = IfCondition(PythonExpression(valid_tool))
     )
 
-    draw_circle =ExecuteProcess(
+    dobot_menu = ExecuteProcess(
         cmd=[[
-            'ros2 ', 'launch ', 'dobot_nodes ', 'draw_circle_action.launch.py'
+            'rqt ', '--force-discover ', '--clear-config ', '-s ', 'dobot_menu'
         ]],
         shell=True,
         output='screen',
@@ -202,6 +220,16 @@ def generate_launch_description():
         )
     )
 
+    PTP_action_event = RegisterEventHandler(
+        OnProcessStart(
+            target_action=PTP_action,
+            on_start=[
+                LogInfo(msg='Starting PointToPoint action server.'),
+                LogInfo(msg='Setting speed and acceleration values.')
+            ]
+        )
+    )
+
     Arc_action_event = RegisterEventHandler(
         OnProcessStart(
             target_action=Arc_action,
@@ -212,11 +240,11 @@ def generate_launch_description():
         )
     )
 
-    PTP_action_event = RegisterEventHandler(
+    CP_action_event = RegisterEventHandler(
         OnProcessStart(
-            target_action=PTP_action,
+            target_action=CP_action,
             on_start=[
-                LogInfo(msg='Starting PointToPoint action server.'),
+                LogInfo(msg='Starting CP action server.'),
                 LogInfo(msg='Setting speed and acceleration values.')
             ]
         )
@@ -237,6 +265,15 @@ def generate_launch_description():
             on_start=[
                 LogInfo(msg='Dobot state updater node started.'),
                 LogInfo(msg='Dobot Magician control stack has been launched correctly')
+            ]
+        )
+    )
+
+    dobot_menu_event = RegisterEventHandler(
+        OnProcessStart(
+            target_action=dobot_menu,
+            on_start=[
+                LogInfo(msg='Booting up dobot menu.'),
             ]
         )
     )
@@ -305,6 +342,11 @@ def generate_launch_description():
         actions=[Arc_action]
         )
     
+    CP_action_sched = TimerAction(
+        period=7.0,
+        actions=[CP_action]
+        )
+    
     draw_circle_sched = TimerAction(
         period=15.0,
         actions=[draw_circle]
@@ -313,6 +355,11 @@ def generate_launch_description():
     robot_state_sched = TimerAction(
         period=18.0,
         actions=[robot_state]
+        )
+    
+    dobot_menu_sched = TimerAction(
+        period=18.0,
+        actions=[dobot_menu]
         )
 
     # -----------------------------------------------------------------------------------------------------------------
@@ -326,10 +373,12 @@ def generate_launch_description():
         homing_event,
         #auto_leveling_event,
         trajectory_validator_event,
-        Arc_action_event,
         PTP_action_event,
+        Arc_action_event,
+        #CP_action_event,
         draw_circle_event,
         robot_state_event,
+        dobot_menu_event,
         tool_null_sched,
         alarms_sched,
         gripper_sched,
@@ -337,9 +386,11 @@ def generate_launch_description():
         homing_sched,
         #auto_leveling_sched,
         trajectory_validator_sched,
-        Arc_action_sched,
         PTP_action_sched,
+        Arc_action_sched,
+        #CP_action_sched,
         draw_circle_sched,
         robot_state_sched,
+        dobot_menu_sched,
         on_shutdown
     ])

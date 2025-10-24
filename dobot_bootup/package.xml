@@ -4,8 +4,7 @@
   <name>dobot_bootup</name>
   <version>1.0.0</version>
   <description>Bringup package for Dobot Magician</description>
-  <author email="kan.jan@wp.pl">Jan Kaniuka</author>
-  <maintainer email="kan.jan@wp.pl">Jan Kaniuka</maintainer>
+  <maintainer email="mathiaslyus@gmail.com">Mathias Lykholt - Ustrup</maintainer>
   <license>BSD</license>
 
   <exec_depend>ros2launch</exec_depend>

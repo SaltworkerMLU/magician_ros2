@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/ArcMotion.action"
   "action/DrawCircle.action"
   "action/PointToPoint.action"
+  "action/ContinuousTrajectory.action"
   "action/SlidingRail.action"
   "msg/DobotAlarmCodes.msg"
   "msg/GripperStatus.msg"

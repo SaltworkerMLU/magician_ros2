@@ -10,14 +10,20 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped 
 import tf_transformations
 from dobot_driver.dobot_handle import bot
-from .PTP_params_class import declare_PTP_params
+from ._PTP_params_class import declare_PTP_params
 from rcl_interfaces.msg import SetParametersResult
 from threading import Thread
 from dobot_msgs.srv import EvaluatePTPTrajectory
 from dobot_msgs.msg import DobotAlarmCodes
 from std_msgs.msg import Float64MultiArray
+from dobot_nodes._goal_callback_action import goal_callback_action, cancel_callback_action, execute_callback_action
 
 class DobotPTPServer(Node):
+    
+    # Make functions into class methods
+    execute_callback = execute_callback_action
+    goal_callback = goal_callback_action
+    cancel_callback = cancel_callback_action
 
     def __init__(self):
         super().__init__('dobot_PTP_server')  # Call any existing __init__ methods using super() as 'dobot_PTP_server'
@@ -139,8 +145,6 @@ class DobotPTPServer(Node):
             else:
                 return list(self.cartesian_params_dict.values())
 
-
-
     def parameters_callback(self, params):
         for param in params:
             if param.name in self.joint_params_names:
@@ -173,8 +177,6 @@ class DobotPTPServer(Node):
             self.dobot_pose = [math.degrees(msg.position[0]), math.degrees(msg.position[1]), math.degrees(msg.position[2]), math.degrees(msg.position[3])]
             self.mode_ACK = True
 
-
-
     def tcp_position_callback(self, msg):
         if self.motion_type in [0, 1, 2, 7, 8, 9]:
             self.dobot_pose = [float(msg.data[0])*1000, float(msg.data[1])*1000, float(msg.data[2])*1000, float(msg.data[3])]
@@ -186,124 +188,6 @@ class DobotPTPServer(Node):
             self.active_alarms = False
         else:
             self.active_alarms = True
-
-    @staticmethod
-    def is_ratio_valid(ratio):
-        if 0.0 < ratio <= 1.0 and int(ratio * 100) != 0:
-            return True
-        return False
-
-
-    def goal_callback(self, goal_request):
-        """Accept or reject a client request to begin an action."""
-        self.target = goal_request.target_pose
-        self.motion_type = goal_request.motion_type
-
-        # Check if there are active alarms (if the LED diode lights up red) 
-        if self.active_alarms:
-            self.get_logger().warn("Goal rejected because of active alarms (LED diode in the robot base lights up red)")
-            return GoalResponse.REJECT
-
-        # Check if trajectory is feasible within robot workspace
-        validation_response = self.send_request_check_trajectory(self.target, self.motion_type)
-        if validation_response.is_valid == False:
-            self.get_logger().warn("Goal rejected: {0}".format(validation_response))
-            return GoalResponse.REJECT
-
-        self.get_logger().info("Result of calling validation service: is valid? {0}, description: {1}".format(validation_response.is_valid, validation_response.message))
-
-
-        # Check if velocity and acceleration ratios are valid
-        if DobotPTPServer.is_ratio_valid(goal_request.velocity_ratio) and DobotPTPServer.is_ratio_valid(goal_request.acceleration_ratio):
-            vel_ratio = int(goal_request.velocity_ratio * 100)
-            acc_ratio = int(goal_request.acceleration_ratio * 100)
-            self.get_logger().info("Vel ratio: {0}".format(vel_ratio))
-            self.get_logger().info("Acc ratio: {0}".format(acc_ratio))
-            bot.set_point_to_point_common_params(vel_ratio, acc_ratio)
-        else:
-            self.get_logger().info('Wrong ratio in action goal field')
-            return GoalResponse.REJECT
-
-        # Wait until robot mode, e.g. PTP MOVEL TCP-coords, is set
-        while not self.mode_ACK:
-            pass
-
-        self.get_logger().info('Goal: {0}'.format(self.target))
-        self.get_logger().info('Mode: {0}'.format(self.motion_type))
-        self.get_logger().info('Received goal request')
-
-        # Check if motion type is a valid one
-        if self.motion_type in self.motion_types_list:
-            return GoalResponse.ACCEPT 
-        else:
-            self.get_logger().info('The motion mode you specified does not exist!')
-            return GoalResponse.REJECT
-
-    def cancel_callback(self, goal_handle):
-        """Accept or reject a client request to cancel an action."""
-        self.get_logger().info('Received cancel request')
-        return CancelResponse.ACCEPT
-
-    @staticmethod
-    def is_goal_reached(target_pose, current_pose, threshold):
-        for i in range(4):
-            if abs(target_pose[i]-current_pose[i]) > threshold:
-                return False
-        return True
-
-    @staticmethod
-    def is_pose_stable(pose_arr):
-        if len(pose_arr) >= 2:
-            if pose_arr[-1] == pose_arr[-2]:
-                return True
-        return False
-
-
-    async def execute_callback(self, goal_handle):
-        """Execute a goal."""
-        self.get_logger().info('Executing goal...')
-
-        bot.set_point_to_point_command(self.motion_type, self.target[0], self.target[1], self.target[2], self.target[3])
-
-        feedback_msg = PointToPoint.Feedback()
-        feedback_msg.current_pose = [0.0, 0.0, 0.0, 0.0]
-        self.pose_arr = []
-
-        result = PointToPoint.Result()
-
-        # Start executing the action
-        while not (DobotPTPServer.is_goal_reached(self.target, self.dobot_pose, 0.2) and DobotPTPServer.is_pose_stable(self.pose_arr)):
-            if goal_handle.is_cancel_requested:
-                goal_handle.canceled()
-                bot.stop_queue(force=True) 
-                bot.clear_queue()
-                bot.start_queue()
-                self.get_logger().info('Goal canceled')
-                result.achieved_pose  = self.dobot_pose
-                return result
-
-
-            # Update sequence
-            feedback_msg.current_pose = self.dobot_pose
-            self.pose_arr.append(self.dobot_pose)
-
-            self.get_logger().info('Publishing feedback: {0}'.format(feedback_msg.current_pose))
-
-            # Publish the feedback
-            goal_handle.publish_feedback(feedback_msg)
-
-            # Sleep for demonstration purposes
-            time.sleep(0.1)
-
-
-        goal_handle.succeed()
-
-
-        result.achieved_pose  = self.dobot_pose
-
-        self.get_logger().info('Returning result: {0}'.format(result.achieved_pose))
-
-        return result
 
     def destroy(self):
         self._action_server.destroy()   # Destroy the instance of the action

@@ -1,8 +1,8 @@
 from dobot_msgs.srv import EvaluatePTPTrajectory
 import rclpy
 from rclpy.node import Node
-from dobot_nodes.dobot_inv_kin import calc_inv_kin
-from dobot_nodes.dobot_forward_kin import calc_FwdKin
+from dobot_nodes._dobot_inv_kin import calc_inv_kin
+from dobot_nodes._dobot_forward_kin import calc_FwdKin
 import math
 from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor
 import os.path as path

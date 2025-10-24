@@ -4,7 +4,6 @@
   <name>dobot_nodes</name>
   <version>1.0.0</version>
   <description>ROS 2 nodes enabling Dobot Magician functionalities using ROS 2 topics, services, and actions.</description>
-  <author email="mathiaslyus@gmail.com">Mathias Lykholt - Ustrup</author>
   <maintainer email="mathiaslyus@gmail.com">Mathias Lykholt - Ustrup</maintainer>
   <license>BSD</license>
 

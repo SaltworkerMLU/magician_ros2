@@ -5,12 +5,10 @@ import pybullet_data
 import os.path as path
 import sys
 from math import radians
-from dobot_nodes.collision_utils import NamedCollisionObject, CollisionDetector
+from dobot_nodes._collision_utils import NamedCollisionObject, CollisionDetector
 import math
-from dobot_nodes.dobot_inv_kin import calc_inv_kin
+from dobot_nodes._dobot_inv_kin import calc_inv_kin
 import os
-
-
 
 global model_config
 

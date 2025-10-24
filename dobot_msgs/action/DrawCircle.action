@@ -2,8 +2,6 @@
 float64[3] position
 float64 radius
 ---
-#result definition
-bool success
+# empty result definition
 ---
-#feedback definition
-float64[4] current_pose
+# empty feedback definition

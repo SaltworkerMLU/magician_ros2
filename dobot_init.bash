@@ -1,1 +1,0 @@
-ros2 launch dobot_bootup dobot_magician_control_system.launch.py

@@ -10,7 +10,7 @@ def main():
     main = Main() # call rqt_gui.main object
     sys.exit( # Exit when...
              main.main( # main application [...] has run its course
-                       sys.argv, standalone='dobot_menu.ros2_dobot_control_panel.Ros2DobotControlPanel'
+                       sys.argv, standalone='dobot_menu.ros2_dobot_menu.Ros2DobotMenu'
                       )
             )
 
