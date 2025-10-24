@@ -1,0 +1,5 @@
+ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [0, 100.0, 10.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
+ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [150.0, -10.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
+ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [150.0, -10.0, 10.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
+ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [149.53038024902344, 119.68309783935547, 20.416275024414062, 42.48761749267578], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
+ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [230.08860778808594, 29.067001342773438, 130.71327209472656, -82.0121841430664], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback

@@ -18,8 +18,8 @@ class Interface:
                 bytesize=serial.EIGHTBITS
             )
         except:
-            print("[WARN] Dobot Magician is not connected.")
-            sys.exit(1)
+            print("[dobot_driver] Dobot Magician is not connected. Please restart this application after connecting the Dobot.")
+            #sys.exit(1)
 
 
     def send(self, message):

@@ -1,0 +1,13 @@
+# Motion type constants
+uint8 MOTION_RELATIVE = 0
+uint8 MOTION_ABSOLUTE = 1
+#goal definition
+uint8 motion_type
+float64[4]  target_pose
+float64 velocity_ratio 1.0
+---
+#result definition
+float64[4] achieved_pose
+---
+#feedback definition
+float64[4] current_pose

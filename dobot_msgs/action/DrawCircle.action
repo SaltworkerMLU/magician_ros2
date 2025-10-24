@@ -1,0 +1,7 @@
+#goal definition
+float64[3] position
+float64 radius
+---
+# empty result definition
+---
+# empty feedback definition

@@ -5,27 +5,17 @@
 <img src="https://user-images.githubusercontent.com/80155305/212770939-2d7a4389-4143-4147-a50a-3453f73a1317.png" width="250" height="250"/><img src="https://user-images.githubusercontent.com/80155305/207256203-75f2607e-b40c-4a45-bf4e-de4aaffe6530.png" width="350" height="250"/><img src="https://user-images.githubusercontent.com/80155305/204082368-6eb63a16-2a22-4aed-83f8-45730a7b5d93.png" width="200" height="250"/>
 </p> 
 
+**This project was originally forked from [this GitHub-repository](https://github.com/jkaniuka/magician_ros2).**
+
 ## Table of contents :clipboard:
-* [Packages in the repository](#packages)
 * [Installation](#installation)
-* [System startup](#running)
-* [Homing procedure](#homing)
 * [Diagnostics](#diagnostics)
-* [Published topics](#topics)
 * [Motion](#motion)
 * [Visualization in RViz](#visualization)
-* [Dobot Magician Control Panel - RQT plugin](#dmcp)
-* [End effectors](#end_effector_control)
 * [Additional tools for visualization](#additional)
 * [Examples](#examples)
-* [Sliding rail](#rail)
-* [Multi-robot system (MRS)](#mrs)
-* [Video - see how the system works](#video)
-* [FAQ](#faq)
-* [Citing](#citing)
-* [Contributing](#contributing)
 
-
+<!-- 
 <a name="packages"></a>
 ## Packages in the repository :open_file_folder:
 
@@ -41,64 +31,114 @@
   - `dobot_motion` - package containing action server to control motion of Dobot Magician (joint interpolated motion / linear motion)
   - `dobot_msgs` -  package defining messages used by control stack
   - `dobot_state_updater` - package containing a node regularly retrieving information about the state of the robot (e.g. joint angles / TCP position)
-  - `dobot_visualization_tools` - useful tools for visualization (e.g. trajectory / range) in form of RViZ markers
+  - `dobot_visualization_tools` - useful tools for visualization (e.g. trajectory / range) in form of RViZ markers 
+-->
 
 <a name="installation"></a>
 ## Installation :arrow_down:
+*This repository uses ~200MB (~5GB including ROS2 Humble and other installed packages).* 
 
-### Requirements
-
-This control system requires a system setup with ROS 2. It is recommended to use Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/index.html), however using Ubuntu 20.04 with [ROS 2 Galactic](https://docs.ros.org/en/galactic/index.html) should also work.
-
-### Install ROS 2 Humble Hawksbill
-Follow the instructions from the [link](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). There are 3 versions of ROS 2 Humble Hawksbill to choose from: Desktop Install, ROS-Base Install and Development tools Install. Be sure to install **Desktop Install** version (`sudo apt install ros-humble-desktop`).
+This section provides a short guide to installing this repository using ROS2 Humble. *If you want to try installing this repository not using Ubuntu-22.04 + ROS2 Humble, do so at your own discretion.*
 
 
-### Install additional modules and packages  
-All necessary modules are in [requirements.txt](https://github.com/jkaniuka/magician_ros2/blob/main/requirements.txt), install using: `pip3 install -r requirements.txt`   
-Packages from apt repository: `sudo apt install ros-humble-diagnostic-aggregator ros-humble-rqt-robot-monitor python3-pykdl`    
-:warning: After installing new RQT plugins run `rqt --force-discover` to make plugins visible in RQT GUI. This issue is further described [here](https://answers.ros.org/question/338282/ros2-what-is-the-rqt-force-discover-option-meaning/).
+ROS2 compatibility | Compatible
+--- | --- |
+Ubuntu-25.04 + ROS2 Kilted | ❓
+Ubuntu-24.04 + ROS2 Jazzy | ❌
+Ubuntu-23.04 + ROS2 Iron | ❓
+Ubuntu-22.04 + ROS2 Humble | ✅
+Ubuntu-20.04 + ROS2 Galactic | ❓
+...  | ❓
 
-### Create workspace for control system (build from source)
+First, install Ubuntu-22.04 using one of the below options:
+
+- Install WSL2 by opening **command prompt** and typing `install -d Ubuntu-22.04`. *Only works with windows*
+- Use a virtual machine (VM). If you're new to VMs, I recommend VMware.
+
+<a name="installation_repo"></a>
+### A simplified way to install this repository
+
+Open a linux terminal or the program "Ubuntu 22.04 LTS" if you're using WSL2 and paste the following:
+
 ```
-source /opt/ros/humble/setup.bash
-mkdir -p ~/magician_ros2_control_system_ws/src
-git clone https://github.com/jkaniuka/magician_ros2.git ~/magician_ros2_control_system_ws/src
-cd magician_ros2_control_system_ws
-rosdep install -i --from-path src --rosdistro humble -y
-colcon build
+cd ~
+
+# Create file "install_repository.bash"
+touch install_repository.bash
+
+# --------------------------------------------------------- #
+# This writes everything nessecary into the file.           # 
+# --------------------------------------------------------- #
+cat > install_repository.bash << EOF
+# Download this repository into a specified folder
+project_repo_name=\$1
+if [ "\$project_repo_name" == "" ]; then
+  project_repo_name=ws_magician # The default project_repo_name
+fi
+project_path="\$project_repo_name/src"
+mkdir -p \$project_path # Creates directory
+git clone https://github.com/SaltworkerMLU/magician_ros2.git \$project_path --branch magician_ros2_MLU
+
+# Option to auto bootup ros2_magician_mlu when terminal is opened.
+ros2_magician_mlu=\$2 # The argument passed along this bash file
+
+echo "" >> ~/.bashrc; # Creates empty line
+echo "export MAGICIAN_TOOL=none" >> ~/.bashrc;
+echo "source ~/\$project_repo_name/install/setup.bash" >> ~/.bashrc;
+
+if [ \$ros2_magician_mlu == "auto_bootup" ]; then
+    echo "" >> ~/.bashrc; # Creates empty line
+    echo "# Boots up ros2_magician_mlu whenever terminal is opened" >> ~/.bashrc;
+    echo "folder=\"\\\$(pwd)\"" >> ~/.bashrc;
+    echo "cd ~/\$project_repo_name" >> ~/.bashrc;
+    echo "if [ \\\$folder == "/home/vboxuser" ] || [ \\\$folder == "/mnt/c/Windows" ]; then" >> ~/.bashrc;
+    echo "  bash ~/\$project_repo_name/src/terminal/dobot_start.bash" >> ~/.bashrc;
+    echo "fi" >> ~/.bashrc;
+fi
+EOF
 ```
 
-### Access to serial ports  
-In order to communicate with the robot, access to serial ports is required. To be able to open serial ports without using `sudo`, you need to add yourself to the **dialout** group:
+You have a couple of options depending on how you intend to use this repository. **But only run either one of the commands once!**
 
-```bash
-sudo usermod -a -G dialout <username>
-# Relogin or reboot required!
-```
+* Use folder name "ws_magician" without auto bootup: `bash install_repository.bash`
+* Use folder name "ws_magician" with auto bootup: `bash install_repository.bash ws_magician auto_bootup`
+* Use folder name "YOUR_FOLDER" without auto bootup: `bash install_repository.bash YOUR_FOLDER`
+* Use folder name "YOUR_FOLDER" with auto bootup: `bash install_repository.bash YOUR_FOLDER auto_bootup`
 
-:warning: The USB port to which Dobot Magician is connected is set by default to **/dev/ttyUSB0** - you can change it in [this file](./dobot_driver/dobot_driver/dobot_handle.py). 
+After running either one of the above, enter the command: `rm install_repository.bash` to remove the file.`
 
-<a name="running"></a>
-## System startup :robot:
-1. Connect Dobot Magician with a USB cable to the computer and then turn it on. 
-2. Set the MAGICIAN_TOOL environment variable describing the robot's configuration `export MAGICIAN_TOOL=<tool_type>` (allowed values are: _none, pen, suction_cup, gripper, extended_gripper_).
-3. From inside of the **magician_ros2_control_system_ws** directory, run `. install/setup.bash` to source your workspace.
-3. Launch entire control stack with `ros2 launch dobot_bringup dobot_magician_control_system.launch.py`. 
+### Install ROS2 Humble
 
+Install ROS2 Humble using one of the below options:
+- The bash-script [terminal/ros2humble.bash](https://github.com/SaltworkerMLU/magician_ros2/blob/magician_ros2_MLU/ros2humble.bash) using `bash ros2humble.bash ros2_magician`. Using the option "ros2_magician" also installs the packages used along with this repository.
+- The instructions from [this link](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). Note that you still have to run **terminal/ws_magician.bash** to make the repository work.
 
-<a name="homing"></a>
-## Homing procedure
-Homing should be performed as the first action after the system is started. It is necessary because an incremental encoder has been placed in the base of the manipulator, and the robot is not aware of its actual position when it is powered up. Stop all other scripts controlling the robot before starting the homing procedure.   
-Homing is handled by the service server, to start it run the following command:
-```
-ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure
-```
-A _homing\_position_ parameter is assigned to the server node of the homing service, which allows you to determine the position reached by the manipulator after the procedure is completed. The following are examples of the commands for reading and setting parameters value. 
-```
-ros2 param get /dobot_homing_srv homing_position  
-ros2 param set /dobot_homing_srv homing_position [150.0,0.0,100.0,0.0]
-```
+Once ROS2 Humble is installed, navigate to **~/YOUR_FOLDER** and type `colcon build`. *Building from the wrong folder will cause the build to not load when prompted*. Afterwards, close the terminal.
+
+*In case you are using WSL2, you still need to [install usbipd](https://github.com/dorssel/usbipd-win/releases/tag/v5.3.0) for windows to be able to transfer USB data to WSL2.*
+
+At this point, you can open your linux terminal and if auto bootup is used, you will be able to see this:
+
+image
+
+If you are using the linux terminal, simply run the bash file **terminal/dobot_init.bash** followed by **terminal/dobot_menu.bash**. In case you are using windows using WSL2, run **terminal/dobot_bootup.bat**
+
+#### If you want to edit the source code, simply open a linux terminal, navigate to ~/YOUR_FOLDER, and then type `code .`. This will open Visual Studio Code and install it if not done.
+
+<a name="command_list"></a>
+## A list of commands you can run with the source code
+Service command | description
+--- | --- |
+`ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure` | Initiates homing of the dobot.
+`ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: 'open', keep_compressor_running: true}"` | `gripper state` (type _string_) : _open/close_ & `keep_compressor_running` (type _bool_) : _true/false_
+`ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"` | `enable_suction` (type _bool_) : _true/false_
+
+Action command | description
+--- | --- |
+`ros2 action send_goal /PTP_action  dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [150.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Trajects the dobot towards the specified target_pose and motion_type.
+`ros2 action send_goal /Arc_action  dobot_msgs/action/ArcMotion "{circumference_point: [175.0, 25.0, 100.0, 0.0], ending_point: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Trajects the dobot toward the specified ending_point via. the circumference_point, resulting in a curved arc-like movement
+
+**Adding `--feedback` flag will cause the terminal to display the current position of the robot while it is moving**
 
 <a name="diagnostics"></a>
 ## Diagnostics
@@ -111,46 +151,20 @@ If you already have an open RQT you will find this plugin in section _Plugins ->
   <img src="https://user-images.githubusercontent.com/80155305/220293202-d1320648-719d-4e3c-a592-52e8607d3838.png" width="400" height="400"/><img src="https://user-images.githubusercontent.com/80155305/220293214-8e07c4ef-67fa-40c1-a562-7c97e81730ff.png" width="275" height="400"/>
 </p> 
 
-<a name="topics"></a>
-## Published topics
-- `/joint_states` (sensor_msgs/msg/JointState) - angles values in the manipulator's joints 
-- `/dobot_TCP` (geometry_msgs/msg/PoseStamped) - position of the coordinate frame associated with the end of the last robot link (orientation given as a quaternion)
-- `/dobot_pose_raw` (std_msgs/msg/Float64MultiArray) - position of the coordinate frame associated with the end of the last robot link (raw orientation received from Dobot, expressed in degrees)
-
 <a name="motion"></a>
 ## Motion
-The motion of the manipulator is handled using the ROS 2 action. In order for the manipulator to move to the desired position, the motion target must be sent to the action server. The following describes the structure of the message sent to the action server (part of _dobot\_msgs/action/PointToPoint_):
-* **motion_type**:
-  * 1 -> joint interpolated motion, target expressed in Cartesian coordinates 
-  * 2 -> linear motion, target expressed in Cartesian coordinates 
-  * 4 -> joint interpolated motion, target expressed in joint coordinates 
-  * 5 -> linear motion, target expressed in joint coordinates 
-* **target_pose** - desired position expressed in Cartesian coordinates [_mm_] or in joint coordinates [_degrees_]
+
+motion_type | Coordinates | movement type
+--- | --- | --- |
+1 | Cartesian [X, Y, Z, R] | MoveJ
+2 | Cartesian [X, Y, Z, R] | MoveL
+4 | Joint [θ1, θ2, θ3, θ4] | MoveJ
+5 | Joint [θ1, θ2, θ3, θ4] | MoveL
+
+**NOTE: [X, Y, Z, R] has units [mm, mm, mm, °]. [θ1, θ2, θ3, θ4] has units [°, °, °, °].**
+
 * **velocity_ratio** (default 1.0)
 * **acceleration_ratio** (default 1.0)  
-  
-An example of a command that allows you to send a goal to an action server can be found below (adding `--feedback` flag will cause the terminal to display the current position of the robot while it is moving):
-```
-ros2 action send_goal /PTP_action  dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback
-```
-If you want to cancel the goal, run the following command:
-```
-ros2 service call /PTP_action/_action/cancel_goal action_msgs/srv/CancelGoal
-```
-The parameters associated with the motion action server node allow you to determine the motion velocities and accelerations of the individual joints of the robot (`JT1_vel, JT2_vel, JT3_vel, JT4_vel, JT1_acc, JT2_acc, JT3_acc, JT4_acc`), as well as the parameters of the linear motion of the manipulator (`TCP_vel, end_tool_rot_vel, TCP_acc, end_tool_rot_acc`). 
-
-
-### Goal/trajectory validation
-The motion target is checked by the trajectory validation service server before execution. The trajectory validation service server checks whether the target point is in the manipulator's workspace and whether there is a solution to the inverse kinematics task.  
-  
-The parameters of the node implementing the trajectory validation server are: `axis_1_range`, `axis_2_range`, `axis_3_range`, `axis_4_range`.
-* The first four of these allow the manipulator's working space to be limited by setting position restrictions at joints other than those resulting from the mechanical design. If you send a motion order to a point that violates the restrictions you defined, you will receive the following response from the PointToPoint action server:
-```
-Response: [PTP_server-1] [WARN] [1668081940.281544573] [dobot_PTP_server]:  
-Goal rejected: dobot_msgs.srv.EvaluatePTPTrajectory_Response(is_valid=False,  
-message='Joint limits violated')  
-```
-
 
 <a name="visualization"></a>
 ## Visualization in RViz
@@ -184,28 +198,6 @@ Below you will find screenshots of all the plugin screens:
 <p align="center">
   <img src="https://user-images.githubusercontent.com/80155305/220214189-8eb57aca-bed8-4b55-a3fc-25244a41e721.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/212384115-3875164a-3717-465e-a3cc-cda9b8913ea6.png" width="250" height="230"/>
 </p> 
-
-<a name="end_effector_control"></a>
-## End Effector control
-Control of the gripper and pneumatic suction cup was implemented using ROS 2 services.
-
-### Gripper:
-Command example: 
-```
-ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: 'open', keep_compressor_running: true}"
-```
-Request fields:
-- `gripper state` (type _string_) : _open/close_
-- `keep_compressor_running` (type _bool_) : _true/false_
-
-### Suction cup:
-Command example:
-```
-ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"
-```
-Request fields:
-- `enable_suction` (type _bool_) : _true/false_
-
 
 <a name="additional"></a>
 ## Additional tools for visualization
@@ -252,72 +244,3 @@ Running sample scripts:
 - `ros2 run dobot_demos test_homing`
 - `ros2 run dobot_demos test_point_to_point`
 - `ros2 run dobot_demos test_pick_and_place`
-
-
-<a name="rail"></a>
-## Sliding rail 
-If you have _Dobot Magician Sliding Rail_ and you want to get real time feedback about the position of the carriage you need to export `MAGICIAN_RAIL_IN_USE` environment variable before launching entire control stack (`export MAGICIAN_RAIL_IN_USE=true`). The current position of the carriage on the sliding rail will be published on the `/dobot_rail_pose` topic at a frequency of 20 Hz. After disconnecting the sliding rail, type `unset MAGICIAN_RAIL_IN_USE` and restart entire control system. 
-
-Control of the sliding rail is possible both from **Dobot Magician Control Panel** RQT plugin and by using **/move_sliding_rail** action server. To launch **/move_sliding_rail** action server and load parameters (sliding rail velocity and acceleration) use the command below:
-```
-ros2 launch dobot_motion dobot_rail.launch.py
-```
-An example of a command that allows you to send a goal to an action server can be found below:
-```
-ros2 action send_goal /move_sliding_rail dobot_msgs/action/SlidingRail "{target_pose: 500}"
-```
-
-<a name="mrs"></a>
-## Multi-Robot System (MRS) :robot:
-If you want to connect several Dobot Magician robots to the same computer or to the same network, thus creating a _multi-robot system_ (MRS), check the [**magician-mrs**](https://github.com/jkaniuka/magician_ros2/tree/magician-mrs) branch.
-
-<a name="video"></a>
-## Video - see how the system works :movie_camera:
-
-| Overview and features | Interactive Markers       | 
-| ------ | ------ | 
-| [<img src="https://user-images.githubusercontent.com/80155305/215295789-e6b1dadd-a819-4fe9-a633-4ce483a47964.png" width="100%">](https://vimeo.com/793400746)   | <video src="https://github.com/jkaniuka/dobot_tmp/assets/80155305/7b946f88-e4c8-499f-84f4-1ecf10534b25">| 
-
-
-
-
-<a name="faq"></a>
-## FAQ :question:
-**Why haven't I used MoveIt 2?**  
-
-MoveIt 2 is a great tool, but I have not used it in my control system for several reasons: 
-* To begin with, this system was created with the idea of using it when learning ROS 2. First, you need to familiarize yourself with entities such as actions, topics, services, parameters to then understand how this is being utilized in MoveIt 2.
-* Secondly, MoveIt is used among other things to generate collision-free trajectories. The mechanical design of Dobot Magician robot and its very short range (32 cm) makes it _de facto_ unsuitable for working in spaces with obstacles.
-* Lastly, MoveIt enables grasp generation. Dobot Magician is equipped with a gripper that can be either fully open or fully closed. In addition, it is always pointed horizontally downward. Grip generation in this case does not seem to be necessary. 
-
-<a name="citing"></a>
-## Citing :scroll:
-If you find this work useful, please give credits to the author by citing:
-
-```
-@mastersthesis{jkaniuka-bsc-23-twiki,
-  author = {Kaniuka, Jan},
-  school = {WEiTI},
-  title = {{System sterowania robota manipulacyjnego Dobot Magician na bazie frameworka ROS2}},
-  engtitle = {{Control system of DobotMagician robotic manipulator based on ROS2 framework}},
-  year = {2023},
-  type = {Bachelor's thesis},
-  lang = {pl},
-  organization = {IAiIS},
-  publisher = {IAiIS},
-  tutor = {Tomasz Winiarski},
-  twiki = {bsc},
-  url = {https://gitlab-stud.elka.pw.edu.pl/robotyka/rpmpg_pubs/-/raw/main/student-theses/jkaniuka-bsc-23-twiki.pdf}
-}
-```
-
-<a name="contributing"></a>
-## Contributing
-
-#### Bug Reports & Feature Requests
-
-Please use the [**issue tracker**](https://github.com/jkaniuka/magician_ros2/issues) to report any bugs or feature requests.
-
-
-
-
