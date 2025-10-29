@@ -1,7 +1,12 @@
 #goal definition
-float64[3] position
+float64[4] target_pose
 float64 radius
+float64 z_level -74.0
+float64 velocity_ratio 1.0
+float64 acceleration_ratio 1.0
 ---
-# empty result definition
+#result definition
+float64[4] achieved_pose
 ---
-# empty feedback definition
+#feedback definition
+float64[4] current_pose

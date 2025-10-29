@@ -65,6 +65,9 @@ class DobotMenu(QWidget):
         self.frame = "base"                     # Store current frame mode ("base" or "joint")
         self.valueType = "base"                 # Store current programming value type
         self.movementType = "movej"             # Store current programming movement type
+        self.gripperType = "gripper"            # Store grupper type (gripper, suction cup)
+        self.gripperClose = False               # Store current gripper mode (on or off)
+        self.suctionCupOn = False               # Store current suction cup mode (on or off)
         self.import_path = os.path.join(package_path, 'share', 'dobot_menu', 'resource', 'commands') # Default import path
 
         # ----------------------------------- #
@@ -182,12 +185,26 @@ class DobotMenu(QWidget):
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()"""
 
         # Programming Tab
-        self.programmingButtonTeach.clicked.connect(self.execute_teach_command)
-        self.programmingButtonExecute.clicked.connect(self.execute_execute_command)
-        self.programmingButtonExport.clicked.connect(self.execute_export_command)
-        self.programmingButtonImport.clicked.connect(self.execute_import_command)
+        self.programmingButtonTeachEE.clicked.connect(self.EE_teach_command)
 
-        self.programmingLineEditExportPath.setText("/mnt/c/users/mathias/WSL")              # Default export path
+        self.EEGripperClose.setChecked(True)
+        self.EEGripperClose.setAutoExclusive(False)
+        self.EEGripperOpen.setAutoExclusive(False)
+        self.EESuctionCupOn.setAutoExclusive(False)
+        self.EESuctionCupOff.setAutoExclusive(False)
+
+        self.EESuctionCupOn.toggled.connect(lambda:self.suctionCup_control_tab(self.EESuctionCupOn))
+        self.EESuctionCupOff.toggled.connect(lambda:self.suctionCup_control_tab(self.EESuctionCupOff))
+        self.EEGripperClose.toggled.connect(lambda:self.gripper_control_tab(self.EEGripperClose))
+        self.EEGripperOpen.toggled.connect(lambda:self.gripper_control_tab(self.EEGripperOpen))
+
+        self.programmingButtonTeachPTP.clicked.connect(self.PTP_teach_command)
+
+        self.programmingButtonExecute.clicked.connect(self.execute_command)
+        self.programmingButtonExport.clicked.connect(self.export_command)
+        self.programmingButtonImport.clicked.connect(self.import_command)
+
+        self.programmingLineEditExportPath.setText("/mnt/c/users")              # Default export path
 
         self.programmingLineEditCode.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.programmingLineEditCode.textChanged.connect(lambda:self.execute_save_command(self.programmingLineEditCode))         # Autosave the code when the text is changed
@@ -206,7 +223,7 @@ class DobotMenu(QWidget):
 
 
         # Drawing tab
-        self.DrawingButtonTeachArc.clicked.connect(self.execute_teachArc_command)
+        self.DrawingButtonTeachArc.clicked.connect(self.Arc_teach_command)
         self.DrawXCoordinateSliderCircumference.valueChanged.connect(lambda:self.change_XY_dot(self.DrawXCoordinateSliderCircumference))
         self.DrawYCoordinateSliderCircumference.valueChanged.connect(lambda:self.change_XY_dot(self.DrawYCoordinateSliderCircumference))
 
@@ -288,12 +305,6 @@ class DobotMenu(QWidget):
         self.EndDot.setBrush(QBrush(Qt.darkRed, Qt.SolidPattern))
         self.sceneTop.addItem(self.EndDot)
 
-        #bot.clear_queue()
-        #bot.start_queue()
-        #bot.set_auto_leveling(1, 1)
-        #bot.set_
-        
-
 
     def _on_line_update_timer(self):
         if self.dobotJoints is not None:
@@ -358,11 +369,7 @@ class DobotMenu(QWidget):
                    -(self.DrawYCoordinateSliderEnd.value() * self.sceneScaling + math.sin(self.dobotJoints[0]) * self.EE_XY_len)]
         self.EndDot.setPos(_EndDot[0], _EndDot[1])
 
-        #self.GPIO.setText(str(bot.get_auto_leveling()))
-
-        #self._node.get_logger().info(f"Testing: {str(bot.get_handheld_teaching_mode())}")
-
-        if self.Root.currentIndex() != 3: # This is the drawing tab
+        if self.Root.currentIndex() != 3 and self.ProgrammingRoot.currentIndex() != 2: # This is the drawing tab
             self.CDot.hide()
             self.EndDot.hide()
         else:
@@ -388,6 +395,34 @@ class DobotMenu(QWidget):
         self.rail_pose = msg.data
         self.CurrentPositionRail.setText(str(int(self.rail_pose)))
 
+    def gripper_control_tab(self, b):
+        if b.text() == "Close" and b.isChecked() == True:
+            self.gripperClose = True
+            self.EEGripperOpen.setChecked(False)
+                    
+        if b.text() == "Open" and b.isChecked() == True:
+            self.gripperClose = False
+            self.EEGripperClose.setChecked(False)
+        
+        if self.gripperType != "gripper":
+            self.EESuctionCupOn.setChecked(False)
+            self.EESuctionCupOff.setChecked(False)
+        self.gripperType = "gripper"
+    
+    def suctionCup_control_tab(self, b):
+        if b.text() == "On" and b.isChecked() == True:
+            self.suctionCupOn = True
+            self.EESuctionCupOff.setChecked(False)
+                    
+        if b.text() == "Off" and b.isChecked() == True:
+            self.suctionCupOn = False
+            self.EESuctionCupOn.setChecked(False)
+        
+        if self.gripperType != "suctionCup":
+            self.EEGripperClose.setChecked(False)
+            self.EEGripperOpen.setChecked(False)
+        
+        self.gripperType = "suctionCup"
 
     def framestate_control_tab(self, b):
         if b.text() == "Base" and b.isChecked() == True:
@@ -409,6 +444,7 @@ class DobotMenu(QWidget):
                     
         if b.text() == "MoveJ" and b.isChecked() == True:
             self.movementType = "movej"
+            
 
     def JT_IDLE(self):
         if self.frame == "base":
@@ -480,7 +516,7 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-    def execute_teachArc_command(self):
+    def Arc_teach_command(self):
         # -------------------------- #
         # Teach the pose in Arc      #
         # -------------------------- #
@@ -504,7 +540,34 @@ class DobotMenu(QWidget):
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
         self.execute_load_command(self.DrawingLineEditCode)
 
-    def execute_teach_command(self):
+    def EE_teach_command(self):
+        # -------------------------- #
+        # Teach end-effector command #
+        # -------------------------- #
+
+        if self.gripperType == "gripper" and self.gripperClose == True:
+            command_cmd = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "close", keep_compressor_running: false}"'
+            self.send_gripper_state("opened")
+        elif self.gripperType == "gripper" and self.gripperClose == False:
+            command_cmd = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "open", keep_compressor_running: false}"'
+            self.send_gripper_state("opened")
+        elif self.gripperType == "suctionCup" and self.suctionCupOn == True:
+            command_cmd = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"'
+            self.send_gripper_state("opened")
+        elif self.gripperType == "suctionCup" and self.suctionCupOn == False:
+            command_cmd = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
+            self.send_gripper_state("opened")
+        
+        command_file = self.programmingLineEditCommandPath.text()
+        command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
+        subprocess.Popen(
+                    command, universal_newlines=True, shell=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
+        
+        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.DrawingLineEditCode)
+    
+    def PTP_teach_command(self):
         # --------------------- #
         # Teach the pose in PTP #
         # --------------------- #
@@ -527,7 +590,7 @@ class DobotMenu(QWidget):
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
         self.execute_load_command(self.DrawingLineEditCode)
     
-    def execute_execute_command(self):
+    def execute_command(self):
         # ------------------- #
         # Execute the code    #
         # ------------------- #
@@ -538,7 +601,7 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-    def execute_export_command(self):
+    def export_command(self):
         # ------------------- #
         # Export code to PC   #
         # ------------------- #
@@ -549,7 +612,7 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-    def execute_import_command(self):
+    def import_command(self):
         # ------------------- #
         # Import code from PC #
         # ------------------- #

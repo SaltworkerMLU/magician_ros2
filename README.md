@@ -1,19 +1,19 @@
 # ROS 2 control stack for Dobot Magician  
-<img src="https://img.shields.io/badge/ros--version-humble-green"/>  <img src="https://img.shields.io/badge/platform%20-Ubuntu%2022.04-orange"/>  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<img src="https://img.shields.io/badge/ros--version-humble-blue"/>  <img src="https://img.shields.io/badge/platform%20-Ubuntu%2022.04-orange"/>  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/80155305/212770939-2d7a4389-4143-4147-a50a-3453f73a1317.png" width="250" height="250"/><img src="https://user-images.githubusercontent.com/80155305/207256203-75f2607e-b40c-4a45-bf4e-de4aaffe6530.png" width="350" height="250"/><img src="https://user-images.githubusercontent.com/80155305/204082368-6eb63a16-2a22-4aed-83f8-45730a7b5d93.png" width="200" height="250"/>
+
+<img src=.github/images/dobot_magician_gripper.webp width=250 height=250><img src="https://user-images.githubusercontent.com/80155305/207256203-75f2607e-b40c-4a45-bf4e-de4aaffe6530.png" width="350" height="250"/><img src=".github/images/HumbleHawksbill.webp" width="200" height="250"/>
 </p> 
 
 **This project was originally forked from [this GitHub-repository](https://github.com/jkaniuka/magician_ros2).**
 
 ## Table of contents :clipboard:
 * [Installation](#installation)
-* [Diagnostics](#diagnostics)
+* [Command API](#commands)
 * [Motion](#motion)
 * [Visualization in RViz](#visualization)
 * [Additional tools for visualization](#additional)
-* [Examples](#examples)
 
 <!-- 
 <a name="packages"></a>
@@ -117,16 +117,23 @@ Once ROS2 Humble is installed, navigate to **~/YOUR_FOLDER** and type `colcon bu
 
 *In case you are using WSL2, you still need to [install usbipd](https://github.com/dorssel/usbipd-win/releases/tag/v5.3.0) for windows to be able to transfer USB data to WSL2.*
 
-At this point, you can open your linux terminal and if auto bootup is used, you will be able to see this:
+At this point, you can open your linux terminal (in case you are using WSL2, create a shortcut to **terminal/dobot_bootup.bat** to run it from windows).
 
-image
-
-If you are using the linux terminal, simply run the bash file **terminal/dobot_init.bash** followed by **terminal/dobot_menu.bash**. In case you are using windows using WSL2, run **terminal/dobot_bootup.bat**
+If you are not using the auto bootup option, simply run the bash file **terminal/dobot_bootup.bash**. 
 
 #### If you want to edit the source code, simply open a linux terminal, navigate to ~/YOUR_FOLDER, and then type `code .`. This will open Visual Studio Code and install it if not done.
 
-<a name="command_list"></a>
+<a name="commands"></a>
 ## A list of commands you can run with the source code
+
+Example script | description
+--- | --- |
+`ros2 run dobot_demos test_gripper` | Tests gripper
+`ros2 run dobot_demos test_suction_cup` | Tests suction cup
+`ros2 run dobot_demos test_homing` | Homes the dobot
+`ros2 run dobot_demos test_point_to_point` | Moves to a certain spot using PTP movement
+`ros2 run dobot_demos test_pick_and_place` | Does a sequence of PTP movements whil picking and placing objects in the dobot's way.
+
 Service command | description
 --- | --- |
 `ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure` | Initiates homing of the dobot.
@@ -140,19 +147,16 @@ Action command | description
 
 **Adding `--feedback` flag will cause the terminal to display the current position of the robot while it is moving**
 
-<a name="diagnostics"></a>
-## Diagnostics
-The system takes care of the robot's state diagnostics. Using the _Diagnostics Viewer_ RQT plugin, you can clearly visualize information about active alarm states. To start _Diagnostics Viewer_ run the following command:
-```
-rqt -s rqt_robot_monitor
-```
-If you already have an open RQT you will find this plugin in section _Plugins -> Robot Tools -> Diagnostics Viewer_. After opening the plugin, select _Alternative view_ option at the top. After double-clicking on the alarm description, a window will appear with information about its probable cause and how to delete it. Below you will find screenshots of the _Diagnostics Viewer_ plugin. 
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/80155305/220293202-d1320648-719d-4e3c-a592-52e8607d3838.png" width="400" height="400"/><img src="https://user-images.githubusercontent.com/80155305/220293214-8e07c4ef-67fa-40c1-a562-7c97e81730ff.png" width="275" height="400"/>
-</p> 
+Other command | image
+--- | --- |
+`rqt -s rqt_robot_monitor` | <img src="https://user-images.githubusercontent.com/80155305/220293202-d1320648-719d-4e3c-a592-52e8607d3838.png" width="240" height="250"/> <img src="https://user-images.githubusercontent.com/80155305/220293214-8e07c4ef-67fa-40c1-a562-7c97e81730ff.png" width="166" height="250"/>
+`rqt -s dobot_menu` | <img src=".github/images/dobot_menu_control.png" width="350" height="400"/>
+`ros2 launch` <br> `dobot_description` <br> `display.launch.py DOF:=3 `<br>` tool:=none `<br>` use_camera:=false` | <img src=".github/images/dobot_simulator_3D.png" width=240 height=250>
 
 <a name="motion"></a>
 ## Motion
+
+### PTP
 
 motion_type | Coordinates | movement type
 --- | --- | --- |
@@ -166,10 +170,12 @@ motion_type | Coordinates | movement type
 * **velocity_ratio** (default 1.0)
 * **acceleration_ratio** (default 1.0)  
 
+### Arc
+
 <a name="visualization"></a>
 ## Visualization in RViz
 In Rviz, you can display one of up to 8 different robot configurations. All allowed configurations are placed in the diagram below:
-![image](https://user-images.githubusercontent.com/80155305/212382287-59fe1bd2-4e2e-4e00-ac8e-f1dd359ecaee.png)  
+![image](.github/images/visualization_rviz.png)  
 The command that starts the visualization of the manipulator in the example configuration is as follows: 
 ```
 ros2 launch dobot_description display.launch.py DOF:=4 tool:=extended_gripper use_camera:=true
@@ -183,16 +189,11 @@ Below you will find 3 sample visualizations:
 
 
 <a name="dmcp"></a>
-## Dobot Magician Control Panel
-Dobot Magician Control Panel is an RQT plugin that allows you to conveniently position the manipulator, visualize its state, modify motion parameters and control end effectors. In order to launch it,  run the following command:
-```
-rqt -s dobot_control_panel
-```
-:warning: When you use _Dobot Magician Control Panel_, no other robot control program can be run. Either the robot is controlled in **manual mode** or in **automatic mode**.   
-Below you will find screenshots of all the plugin screens:
+## Dobot Magician Menu
+Dobot Magician Menu is an RQT plugin that allows you to conveniently position the manipulator, visualize its state, modify motion parameters and control end effectors. Below you will find screenshots of all the plugin screens:
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/80155305/220214176-0c0844c0-447b-481c-941b-aafd72b94d5a.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/220214179-14b4493f-4dd0-4de5-89fc-d8c60e9d4d8b.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/220214183-296eac2b-a3b0-4a84-b799-145440944eef.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp
+  <img src=".github/images/dobot_menu_control.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/220214179-14b4493f-4dd0-4de5-89fc-d8c60e9d4d8b.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_speed.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp
 </p> 
 
 <p align="center">
@@ -236,11 +237,3 @@ ros2 run dobot_visualization_tools int_marker --ros-args -p TCP_x_offset:=0.059 
 
 
 <a name="examples"></a>
-## Examples
-Sample scripts have been included in **dobot_demos** package. Analysis of sample codes (_minimal working examples_) from this package will help you understand how to control Dobot Magician robot.  
-Running sample scripts:  
-- `ros2 run dobot_demos test_gripper`
-- `ros2 run dobot_demos test_suction_cup`
-- `ros2 run dobot_demos test_homing`
-- `ros2 run dobot_demos test_point_to_point`
-- `ros2 run dobot_demos test_pick_and_place`
