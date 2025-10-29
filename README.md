@@ -52,70 +52,40 @@ Ubuntu-20.04 + ROS2 Galactic | ❓
 
 First, install Ubuntu-22.04 using one of the below options:
 
-- Install WSL2 by opening **command prompt** and typing `install -d Ubuntu-22.04`. *Only works with windows*
+- Install WSL2 by opening **command prompt** and typing `wsl install -d Ubuntu-22.04`. *Only works with windows*
 - Use a virtual machine (VM). If you're new to VMs, I recommend VMware.
 
-<a name="installation_repo"></a>
-### A simplified way to install this repository
+*In case you are using WSL2, you need to [install usbipd](https://github.com/dorssel/usbipd-win/releases/tag/v5.3.0) for windows to be able to transfer USB data to WSL2.*
 
-Open a linux terminal or the program "Ubuntu 22.04 LTS" if you're using WSL2 and paste the following:
+*In case you are using a VM, allow data transfer using USB ports with the command* `sudo usermod -a -G dialout <username>`.
+
+<a name="installation_repo"></a>
+### How to install this repository
+
+Start off by opening a **linux terminal**. If you are using WSL2, do so by opening **command prompt** and typing `wsl -d Ubuntu-22.04`
+
+Inside the opening **linux terminal**, paste the following:
 
 ```
 cd ~
-
-# Create file "install_repository.bash"
-touch install_repository.bash
-
-# --------------------------------------------------------- #
-# This writes everything nessecary into the file.           # 
-# --------------------------------------------------------- #
-cat > install_repository.bash << EOF
-# Download this repository into a specified folder
-project_repo_name=\$1
-if [ "\$project_repo_name" == "" ]; then
-  project_repo_name=ws_magician # The default project_repo_name
-fi
-project_path="\$project_repo_name/src"
-mkdir -p \$project_path # Creates directory
-git clone https://github.com/SaltworkerMLU/magician_ros2.git \$project_path --branch magician_ros2_MLU
-
-# Option to auto bootup ros2_magician_mlu when terminal is opened.
-ros2_magician_mlu=\$2 # The argument passed along this bash file
-
+mkdir -p ~/ws_magician/src # Creates directory
+git clone https://github.com/SaltworkerMLU/magician_ros2.git ~/ws_magician/src --branch magician_ros2_MLU
 echo "" >> ~/.bashrc; # Creates empty line
 echo "export MAGICIAN_TOOL=none" >> ~/.bashrc;
-echo "source ~/\$project_repo_name/install/setup.bash" >> ~/.bashrc;
-
-if [ \$ros2_magician_mlu == "auto_bootup" ]; then
-    echo "" >> ~/.bashrc; # Creates empty line
-    echo "# Boots up ros2_magician_mlu whenever terminal is opened" >> ~/.bashrc;
-    echo "folder=\"\\\$(pwd)\"" >> ~/.bashrc;
-    echo "cd ~/\$project_repo_name" >> ~/.bashrc;
-    echo "if [ \\\$folder == "/home/vboxuser" ] || [ \\\$folder == "/mnt/c/Windows" ]; then" >> ~/.bashrc;
-    echo "  bash ~/\$project_repo_name/src/terminal/dobot_start.bash" >> ~/.bashrc;
-    echo "fi" >> ~/.bashrc;
-fi
-EOF
+echo "source ~/ws_magician/src/install/setup.bash" >> ~/.bashrc;
 ```
 
-You have a couple of options depending on how you intend to use this repository. **But only run either one of the commands once!**
+After doing so, paste the following into the **linux terminal**: `bash ~/ws_magician/src/terminal/install_dependencies.bash`
 
-* Use folder name "ws_magician" without auto bootup: `bash install_repository.bash`
-* Use folder name "ws_magician" with auto bootup: `bash install_repository.bash ws_magician auto_bootup`
-* Use folder name "YOUR_FOLDER" without auto bootup: `bash install_repository.bash YOUR_FOLDER`
-* Use folder name "YOUR_FOLDER" with auto bootup: `bash install_repository.bash YOUR_FOLDER auto_bootup`
+When this is done, reboot linux. If you are using WSL2, open a new **command prompt** and type `wsl --shutdown` followed by `wsl -d Ubuntu-22.04`
 
-After running either one of the above, enter the command: `rm install_repository.bash` to remove the file.`
+After rebooting linux, copy the following into your terminal: 
 
-### Install ROS2 Humble
-
-Install ROS2 Humble using one of the below options:
-- The bash-script [terminal/ros2humble.bash](https://github.com/SaltworkerMLU/magician_ros2/blob/magician_ros2_MLU/ros2humble.bash) using `bash ros2humble.bash ros2_magician`. Using the option "ros2_magician" also installs the packages used along with this repository.
-- The instructions from [this link](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html). Note that you still have to run **terminal/ws_magician.bash** to make the repository work.
-
-Once ROS2 Humble is installed, navigate to **~/YOUR_FOLDER** and type `colcon build`. *Building from the wrong folder will cause the build to not load when prompted*. Afterwards, close the terminal.
-
-*In case you are using WSL2, you still need to [install usbipd](https://github.com/dorssel/usbipd-win/releases/tag/v5.3.0) for windows to be able to transfer USB data to WSL2.*
+```
+cd ~/ws_magician
+colcon build
+```
+*Building using **colcon build** from the wrong folder will cause the build to not load when prompted*. Afterwards, close the terminal.
 
 At this point, you can open your linux terminal (in case you are using WSL2, create a shortcut to **terminal/dobot_bootup.bat** to run it from windows).
 

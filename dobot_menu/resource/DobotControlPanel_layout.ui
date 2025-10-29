@@ -3330,6 +3330,472 @@
             <attribute name="title">
               <string>Arc</string>
             </attribute>
+
+            <!-- Drawing BUTTON teach Arc -->
+            <widget class="QPushButton" name="DrawingButtonTeachArc">
+              <property name="geometry">
+                <rect>
+                  <x>230</x>
+                  <y>140</y>
+                  <width>110</width>
+                  <height>50</height>
+                </rect>
+              </property>
+              <property name="text">
+                <string>Teach (Arc)</string>
+              </property>
+            </widget>
+
+            <widget class="QLabel" name="DrawingText">
+              <property name="geometry">
+                <rect>
+                  <x>10</x>
+                  <y>0</y>
+                  <width>301</width>
+                  <height>51</height>
+                </rect>
+              </property>
+              <property name="font">
+                <font>
+                  <pointsize>15</pointsize>
+                </font>
+              </property>
+              <property name="text">
+                <string>Circumference point (at EE)</string>
+              </property>
+            </widget>
+
+            <!-- Add layout widget to window -->
+            <widget class="QWidget" name="layoutWidget">
+              <property name="geometry">
+                <rect>
+                  <x>10</x>
+                  <y>50</y>
+                  <width>331</width>
+                  <height>75</height>
+                </rect>
+              </property>
+              <layout class="QGridLayout" name="DrawXYLayout">
+
+              <!-- Draw X-coordinate LABEL -->
+              <item row="0" column="0">
+                <widget class="QLabel" name="DrawXCoordinateLabelCircumference">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>X-axis: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate LABEL -->
+              <item row="1" column="0">
+                <widget class="QLabel" name="DrawYCoordinateLabelCircumference">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Y-axis: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw X-coordinate SLIDER -->
+              <item row="0" column="2">
+                <widget class="QSlider" name="DrawXCoordinateSliderCircumference">
+                  <property name="minimum">
+                    <number>-275</number>
+                  </property>
+                  <property name="maximum">
+                    <number>275</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>175</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate SLIDER -->
+              <item row="1" column="2">
+                <widget class="QSlider" name="DrawYCoordinateSliderCircumference">
+                  <property name="minimum">
+                    <number>-275</number>
+                  </property>
+                  <property name="maximum">
+                    <number>275</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>0</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw X-coordinate axis -->
+              <item row="0" column="1">
+                <widget class="QLabel" name="DrawXCoordinateAxisCircumference">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>175</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                    <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate axis -->
+              <item row="1" column="1">
+                <widget class="QLabel" name="DrawYCoordinateAxisCircumference">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>0</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate LABEL -->
+              <item row="2" column="0">
+                <widget class="QLabel" name="DrawZCoordinateLabelCircumference">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Z-axis: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate axis -->
+              <item row="2" column="1">
+                <widget class="QLabel" name="DrawZCoordinateAxisCircumference">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>-74</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                    <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate teach BUTTON -->
+              <item row="2" column="2">
+                <widget class="QPushButton" name="DrawTeachZCoordinateButtonCircumference">
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                    <size>
+                      <width>0</width>
+                      <height>20</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>12</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Teach Z-position</string>
+                  </property>
+                </widget>
+              </item>
+
+            </layout>
+
+          </widget>
+
+          <widget class="QLabel" name="DrawingText">
+            <property name="geometry">
+              <rect>
+                <x>10</x>
+                <y>140</y>
+                <width>201</width>
+                <height>51</height>
+              </rect>
+            </property>
+            <property name="font">
+              <font>
+                <pointsize>15</pointsize>
+              </font>
+            </property>
+            <property name="text">
+              <string>Ending point (at EE)</string>
+            </property>
+          </widget>
+
+          <!-- Add layout widget to window -->
+          <widget class="QWidget" name="layoutWidget">
+            <property name="geometry">
+              <rect>
+                <x>10</x>
+                <y>190</y>
+                <width>331</width>
+                <height>75</height>
+              </rect>
+            </property>
+            <layout class="QGridLayout" name="DrawXYLayout">
+
+              <!-- Draw X-coordinate LABEL -->
+              <item row="0" column="0">
+                <widget class="QLabel" name="DrawXCoordinateLabelEnd">
+                <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>X-axis: </string>
+                  </property>
+                    <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate LABEL -->
+              <item row="1" column="0">
+                <widget class="QLabel" name="DrawYCoordinateLabelEnd">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Y-axis: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+                <!-- Draw X-coordinate SLIDER -->
+              <item row="0" column="2">
+                <widget class="QSlider" name="DrawXCoordinateSliderEnd">
+                  <property name="minimum">
+                    <number>-275</number>
+                  </property>
+                  <property name="maximum">
+                    <number>275</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>200</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate SLIDER -->
+              <item row="1" column="2">
+                <widget class="QSlider" name="DrawYCoordinateSliderEnd">
+                  <property name="minimum">
+                    <number>-275</number>
+                  </property>
+                  <property name="maximum">
+                    <number>275</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>25</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw X-coordinate axis -->
+              <item row="0" column="1">
+                <widget class="QLabel" name="DrawXCoordinateAxisEnd">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>200</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                    <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Y-coordinate axis -->
+              <item row="1" column="1">
+                <widget class="QLabel" name="DrawYCoordinateAxisEnd">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>25</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate LABEL -->
+              <item row="2" column="0">
+                <widget class="QLabel" name="DrawZCoordinateLabelEnd">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Z-axis: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate axis -->
+              <item row="2" column="1">
+                <widget class="QLabel" name="DrawZCoordinateAxisEnd">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>-74</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                    <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Draw Z-coordinate teach BUTTON -->
+              <item row="2" column="2">
+                <widget class="QPushButton" name="DrawTeachZCoordinateButtonEnd">
+                  <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                    <size>
+                      <width>0</width>
+                      <height>20</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>12</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Teach Z-position</string>
+                  </property>
+                </widget>
+              </item>
+
+            </layout>
+
+          </widget>
+
           </widget>
 
           <widget class="QWidget" name="CircleTab">
@@ -3341,570 +3807,6 @@
         </widget>
 
       </widget>
-
-
-      <!--
-      ========================= Drawing Tab =========================
-      -->
-      <widget class="QWidget" name="DrawingTab">
-        <attribute name="title">
-          <string>Drawing</string>
-        </attribute>
-
-        <!-- Add drawing panel logo -->
-        <widget class="QLabel" name="DrawingIcon">
-          <property name="geometry">
-            <rect>
-              <x>10</x>
-              <y>10</y>
-              <width>50</width>
-              <height>50</height>
-            </rect>
-          </property>
-          <property name="styleSheet">
-            <string notr="true"/>
-          </property>
-          <property name="text">
-            <string/>
-          </property>
-          <property name="pixmap">
-            <pixmap>images/drawing.png</pixmap>
-          </property>
-          <property name="scaledContents">
-            <bool>true</bool>
-          </property>
-        </widget>
-
-        <!-- Add drawing panel title -->
-        <widget class="QLabel" name="DrawingText">
-          <property name="geometry">
-            <rect>
-              <x>70</x>
-              <y>10</y>
-              <width>201</width>
-              <height>51</height>
-            </rect>
-          </property>
-          <property name="font">
-            <font>
-              <pointsize>18</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-            </font>
-          </property>
-          <property name="text">
-            <string>Drawing panel</string>
-          </property>
-        </widget>
-
-        <!-- Drawing BUTTON teach Arc -->
-        <widget class="QPushButton" name="DrawingButtonTeachArc">
-          <property name="geometry">
-            <rect>
-              <x>250</x>
-              <y>190</y>
-              <width>110</width>
-              <height>50</height>
-            </rect>
-          </property>
-          <property name="text">
-            <string>Teach (Arc)</string>
-          </property>
-        </widget>
-
-        <widget class="QLabel" name="DrawingText">
-          <property name="geometry">
-            <rect>
-              <x>30</x>
-              <y>50</y>
-              <width>301</width>
-              <height>51</height>
-            </rect>
-          </property>
-          <property name="font">
-            <font>
-              <pointsize>15</pointsize>
-            </font>
-          </property>
-          <property name="text">
-            <string>Circumference point (at EE)</string>
-          </property>
-        </widget>
-
-        <!-- Add layout widget to window -->
-        <widget class="QWidget" name="layoutWidget">
-          <property name="geometry">
-            <rect>
-              <x>30</x>
-              <y>100</y>
-              <width>331</width>
-              <height>75</height>
-            </rect>
-          </property>
-          <layout class="QGridLayout" name="DrawXYLayout">
-
-          <!-- Draw X-coordinate LABEL -->
-          <item row="0" column="0">
-            <widget class="QLabel" name="DrawXCoordinateLabelCircumference">
-              <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>X-axis: </string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate LABEL -->
-          <item row="1" column="0">
-            <widget class="QLabel" name="DrawYCoordinateLabelCircumference">
-              <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Y-axis: </string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw X-coordinate SLIDER -->
-          <item row="0" column="2">
-            <widget class="QSlider" name="DrawXCoordinateSliderCircumference">
-              <property name="minimum">
-                <number>-275</number>
-              </property>
-              <property name="maximum">
-                <number>275</number>
-              </property>
-              <property name="pageStep">
-                <number>0</number>
-              </property>
-              <property name="value">
-                <number>0</number>
-              </property>
-              <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate SLIDER -->
-          <item row="1" column="2">
-            <widget class="QSlider" name="DrawYCoordinateSliderCircumference">
-              <property name="minimum">
-                <number>-275</number>
-              </property>
-              <property name="maximum">
-                <number>275</number>
-              </property>
-              <property name="pageStep">
-                <number>0</number>
-              </property>
-              <property name="value">
-                <number>0</number>
-              </property>
-              <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw X-coordinate axis -->
-          <item row="0" column="1">
-            <widget class="QLabel" name="DrawXCoordinateAxisCircumference">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>0</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-                <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate axis -->
-          <item row="1" column="1">
-            <widget class="QLabel" name="DrawYCoordinateAxisCircumference">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>0</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate LABEL -->
-          <item row="2" column="0">
-            <widget class="QLabel" name="DrawZCoordinateLabelCircumference">
-              <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Z-axis: </string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate axis -->
-          <item row="2" column="1">
-            <widget class="QLabel" name="DrawZCoordinateAxisCircumference">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>-74</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-                <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate teach BUTTON -->
-          <item row="2" column="2">
-            <widget class="QPushButton" name="DrawTeachZCoordinateButtonCircumference">
-              <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                </sizepolicy>
-              </property>
-              <property name="minimumSize">
-                <size>
-                  <width>0</width>
-                  <height>20</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>12</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Teach Z-position</string>
-              </property>
-            </widget>
-          </item>
-
-        </layout>
-
-      </widget>
-
-      <widget class="QLabel" name="DrawingText">
-        <property name="geometry">
-          <rect>
-            <x>30</x>
-            <y>190</y>
-            <width>201</width>
-            <height>51</height>
-          </rect>
-        </property>
-        <property name="font">
-          <font>
-            <pointsize>15</pointsize>
-          </font>
-        </property>
-        <property name="text">
-          <string>Ending point (at EE)</string>
-        </property>
-      </widget>
-
-      <!-- Add layout widget to window -->
-      <widget class="QWidget" name="layoutWidget">
-        <property name="geometry">
-          <rect>
-            <x>30</x>
-            <y>240</y>
-            <width>331</width>
-            <height>75</height>
-          </rect>
-        </property>
-        <layout class="QGridLayout" name="DrawXYLayout">
-
-          <!-- Draw X-coordinate LABEL -->
-          <item row="0" column="0">
-            <widget class="QLabel" name="DrawXCoordinateLabelEnd">
-            <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>X-axis: </string>
-              </property>
-                <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate LABEL -->
-          <item row="1" column="0">
-            <widget class="QLabel" name="DrawYCoordinateLabelEnd">
-              <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Y-axis: </string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-            <!-- Draw X-coordinate SLIDER -->
-          <item row="0" column="2">
-            <widget class="QSlider" name="DrawXCoordinateSliderEnd">
-              <property name="minimum">
-                <number>-275</number>
-              </property>
-              <property name="maximum">
-                <number>275</number>
-              </property>
-              <property name="pageStep">
-                <number>0</number>
-              </property>
-              <property name="value">
-                <number>0</number>
-              </property>
-              <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate SLIDER -->
-          <item row="1" column="2">
-            <widget class="QSlider" name="DrawYCoordinateSliderEnd">
-              <property name="minimum">
-                <number>-275</number>
-              </property>
-              <property name="maximum">
-                <number>275</number>
-              </property>
-              <property name="pageStep">
-                <number>0</number>
-              </property>
-              <property name="value">
-                <number>0</number>
-              </property>
-              <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw X-coordinate axis -->
-          <item row="0" column="1">
-            <widget class="QLabel" name="DrawXCoordinateAxisEnd">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>0</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-                <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Y-coordinate axis -->
-          <item row="1" column="1">
-            <widget class="QLabel" name="DrawYCoordinateAxisEnd">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>0</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate LABEL -->
-          <item row="2" column="0">
-            <widget class="QLabel" name="DrawZCoordinateLabelEnd">
-              <property name="font">
-                <font>
-                  <pointsize>15</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Z-axis: </string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate axis -->
-          <item row="2" column="1">
-            <widget class="QLabel" name="DrawZCoordinateAxisEnd">
-              <property name="minimumSize">
-                <size>
-                  <width>50</width>
-                  <height>0</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>10</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>-74</string>
-              </property>
-              <property name="alignment">
-                <set>Qt::AlignLeft</set>
-                <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
-              </property>
-            </widget>
-          </item>
-
-          <!-- Draw Z-coordinate teach BUTTON -->
-          <item row="2" column="2">
-            <widget class="QPushButton" name="DrawTeachZCoordinateButtonEnd">
-              <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                </sizepolicy>
-              </property>
-              <property name="minimumSize">
-                <size>
-                  <width>0</width>
-                  <height>20</height>
-                </size>
-              </property>
-              <property name="font">
-                <font>
-                  <pointsize>12</pointsize>
-                </font>
-              </property>
-              <property name="text">
-                <string>Teach Z-position</string>
-              </property>
-            </widget>
-          </item>
-
-        </layout>
-
-      </widget>
-      
-      <!-- Programming TEXT code display -->
-      <widget class="QLabel" name="DrawingLabelCode">
-        <property name="geometry">
-          <rect>
-            <x>20</x>
-            <y>320</y>
-            <width>700</width>
-            <height>20</height>
-          </rect>
-        </property>
-        <property name="font">
-          <font>
-            <pointsize>20</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-          </font>
-        </property>
-      </widget>
-
-      <!-- Programming LINE EDIT code display -->
-      <widget class="QTextEdit" name="DrawingLineEditCode">
-        <property name="geometry">
-          <rect>
-            <x>20</x>
-            <y>350</y>
-            <width>700</width>
-            <height>100</height>
-          </rect>
-        </property>
-        <property name="readOnly">
-          <bool>true</bool>
-        </property>
-        <property name="font">
-          <font>
-            <pointsize>5</pointsize>
-          </font>
-        </property>
-        <property name="placeholderText">
-          <string>Type code here...</string>
-        </property>
-      </widget>
-
-    </widget>
 
       <!--
       ========================= Info Tab =========================
@@ -4022,7 +3924,70 @@
 
       </widget>
 
+      <!--
+      ========================= Logger Tab =========================
+      -->
+      <widget class="QWidget" name="LoggerTab">
+        <attribute name="title">
+          <string>Logger</string>
+        </attribute>
+
+        <!-- 
+        Add Text next to question mark logo saying:
+        "logger"
+        -->
+        <widget class="QLabel" name="InfoText">
+          <property name="geometry">
+            <rect>
+              <x>70</x>
+              <y>10</y>
+              <width>750</width>
+              <height>51</height>
+            </rect>
+          </property>
+          <property name="font">
+            <font>
+              <pointsize>18</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+            </font>
+          </property>
+          <property name="text">
+            <string>Logger</string>
+          </property>
+        </widget>
+
+        <!-- Programming LINE EDIT code display -->
+        <widget class="QTextEdit" name="loggercmd">
+          <property name="geometry">
+            <rect>
+              <x>20</x>
+              <y>100</y>
+              <width>700</width>
+              <height>350</height>
+            </rect>
+          </property>
+          <property name="font">
+            <font>
+              <pointsize>5</pointsize>
+            </font>
+          </property>
+          <property name="readOnly">
+            <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="placeholderText">
+            <string>Logs will be posted here...</string>
+          </property>
+        </widget>
+
+      </widget>
+
     </widget>
+
+
 
   </widget>
 

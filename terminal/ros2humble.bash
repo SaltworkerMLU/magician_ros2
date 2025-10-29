@@ -1,19 +1,3 @@
-# Use sudo to print password <... sudo -S echo "changeme">. 
-# This prompts password which is entered automatically using <echo "changeme" | ...>
-echo "changeme" | sudo -S echo "changeme";
-
-# Access /etc/sudoers using sudo (after successful password prompt) to make sudo not prompt password.
-echo "vboxuser ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers;
-
-sudo apt install gedit; # Install GUI text editor - Not necessary for ROS2
-
-# Install usbipd dependencies
-sudo apt install linux-tools-virtual hwdata
-sudo update-alternatives --install /usr/local/bin/usbip usbip `ls /usr/lib/linux-tools/*/usbip | tail -n1` 20
-sudo modprobe vhci_hcd
-
-sudo apt-get install python3-pip
-
 # ------------------------------------ #
 # ROS2 Humble Installation starts here #
 # ------------------------------------ #
@@ -43,21 +27,5 @@ sudo apt install ros-humble-desktop-full;
 
 sudo apt install ros-dev-tools;
 
-# ------------------------------------------ #
-# ros2_magician dependencies start here      #
-# ------------------------------------------ #
-
-sudo apt install ros-humble-diagnostic-aggregator ros-humble-rqt-robot-monitor python3-pykdl;
-sudo apt install gnome-terminal;
-
-sudo rosdep init;
-rosdep update;
-
-rosdep install -i --from-path src --rosdistro humble -y;
-
-sudo usermod -a -G dialout vboxuser;
-
 echo "" >> ~/.bashrc; # Creates empty line
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc;
-
-exit;

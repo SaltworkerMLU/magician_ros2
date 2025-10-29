@@ -171,7 +171,7 @@ class DobotMenu(QWidget):
         self.RAccSlider.sliderReleased.connect(lambda:self.change_vel_cartesian(self.RAccSlider))
 
         # -----------------------------------------------------------------------------
-
+        
         # initial setup (REMEMBER ACCELERATION)
         if self.is_connected:
             bot.set_jog_common_params(100, 1) # (vel_ratio, acc_ratio)
@@ -204,12 +204,11 @@ class DobotMenu(QWidget):
         self.programmingButtonExport.clicked.connect(self.export_command)
         self.programmingButtonImport.clicked.connect(self.import_command)
 
-        self.programmingLineEditExportPath.setText("/mnt/c/users")              # Default export path
+        self.programmingLineEditExportPath.setText("/mnt/c/users")
 
         self.programmingLineEditCode.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.programmingLineEditCode.textChanged.connect(lambda:self.execute_save_command(self.programmingLineEditCode))         # Autosave the code when the text is changed
         self.programmingLineEditCommandPath.textChanged.connect(lambda:self.execute_load_command(self.programmingLineEditCode))  # Load the code when the command file name is changed
-        self.programmingLineEditCode.textChanged.connect(lambda:self.execute_load_command(self.DrawingLineEditCode))         # Autoload the code when the text is changed
         
         self.execute_load_command(self.programmingLineEditCode) # Load the default code to file
 
@@ -230,12 +229,8 @@ class DobotMenu(QWidget):
         self.DrawXCoordinateSliderEnd.valueChanged.connect(lambda:self.change_XY_dot(self.DrawXCoordinateSliderEnd))
         self.DrawYCoordinateSliderEnd.valueChanged.connect(lambda:self.change_XY_dot(self.DrawYCoordinateSliderEnd))
 
-        self.DrawTeachZCoordinateButtonCircumference.clicked.connect(self.teachZCoordinate)
-        self.DrawTeachZCoordinateButtonEnd.clicked.connect(self.teachZCoordinate)
-
-        self.DrawingLineEditCode.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
-        self.execute_load_command(self.DrawingLineEditCode) # Load the default code to file
+        self.DrawTeachZCoordinateButtonCircumference.clicked.connect(self.teachZCoordinateCircumference)
+        self.DrawTeachZCoordinateButtonEnd.clicked.connect(self.teachZCoordinateEnd)
 
         # ------------------------------------------------- #
         # --- QGraphicsView/Scene setup for 2D grid tab --- #
@@ -321,10 +316,11 @@ class DobotMenu(QWidget):
         if field.objectName() == "DrawYCoordinateSliderEnd":
             self.DrawYCoordinateAxisEnd.setText(str(self.DrawYCoordinateSliderEnd.value()))
 
-    def teachZCoordinate(self):
+    def teachZCoordinateCircumference(self):
         self.DrawZCoordinateAxisCircumference.setText(str(round(self.dobotPose[2], 3)))
+    
+    def teachZCoordinateEnd(self):
         self.DrawZCoordinateAxisEnd.setText(str(round(self.dobotPose[2], 3)))
-        self._node.get_logger().info(f"Testing: {str(bot.get_handheld_teaching_trigger())}")
 
     def update_line_position(self):
         #self._node.get_logger().info(f"Updating line position with joint states: {self.dobotJoints}")
@@ -369,7 +365,7 @@ class DobotMenu(QWidget):
                    -(self.DrawYCoordinateSliderEnd.value() * self.sceneScaling + math.sin(self.dobotJoints[0]) * self.EE_XY_len)]
         self.EndDot.setPos(_EndDot[0], _EndDot[1])
 
-        if self.Root.currentIndex() != 3 and self.ProgrammingRoot.currentIndex() != 2: # This is the drawing tab
+        if self.Root.currentIndex() != 3 or self.ProgrammingRoot.currentIndex() != 2: # This is the drawing tab
             self.CDot.hide()
             self.EndDot.hide()
         else:
@@ -538,7 +534,6 @@ class DobotMenu(QWidget):
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
-        self.execute_load_command(self.DrawingLineEditCode)
 
     def EE_teach_command(self):
         # -------------------------- #
@@ -565,7 +560,6 @@ class DobotMenu(QWidget):
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
-        self.execute_load_command(self.DrawingLineEditCode)
     
     def PTP_teach_command(self):
         # --------------------- #
@@ -588,7 +582,6 @@ class DobotMenu(QWidget):
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
-        self.execute_load_command(self.DrawingLineEditCode)
     
     def execute_command(self):
         # ------------------- #
@@ -625,7 +618,6 @@ class DobotMenu(QWidget):
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
-        self.execute_load_command(self.DrawingLineEditCode)
         
     def execute_load_command(self, widget):
         # ------------------- #
@@ -633,7 +625,6 @@ class DobotMenu(QWidget):
         # ------------------- #
         command_file = self.programmingLineEditCommandPath.text()
         self.programmingLabelCode.setText(command_file)             # 
-        self.DrawingLabelCode.setText(command_file)
 
         try:
             with open(self.import_path + '/' + command_file, 'r') as file:
@@ -653,7 +644,6 @@ class DobotMenu(QWidget):
                 file.write(code)
         except Exception as e:
             self.programmingLineEditCode.setText(f"Error saving file: {e}")
-            self.DrawingLineEditCode.setText(f"Error saving file: {e}")
             
 
     def button_clicked_EStopButton(self):
