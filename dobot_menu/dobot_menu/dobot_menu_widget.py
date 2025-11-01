@@ -24,9 +24,12 @@ from std_msgs.msg import Float64, Float64MultiArray
 from dobot_msgs.msg import GripperStatus
 import sys
 from time import sleep
-
-
-
+from dobot_msgs.action import PointToPoint
+from dobot_msgs.action._point_to_point import PointToPoint_FeedbackMessage
+from action_msgs.msg._goal_status_array import GoalStatusArray
+from diagnostic_msgs.msg._diagnostic_array import DiagnosticArray
+#from dobot_msgs.msg._dobot_alarm_codes import DobotAlarmCodes
+from dobot_msgs.msg import DobotAlarmCodes
 
 class DobotMenu(QWidget):
 
@@ -69,6 +72,8 @@ class DobotMenu(QWidget):
         self.gripperClose = False               # Store current gripper mode (on or off)
         self.suctionCupOn = False               # Store current suction cup mode (on or off)
         self.import_path = os.path.join(package_path, 'share', 'dobot_menu', 'resource', 'commands') # Default import path
+        self.log_path = os.path.join(package_path, 'share', 'dobot_menu', 'resource', 'logs') # Default log path
+        self.log_file = "logs.txt"
 
         # ----------------------------------- #
         # Create subscriptions and publishers #
@@ -86,6 +91,22 @@ class DobotMenu(QWidget):
             10)
 
         self.gripper_state_publ = self._node.create_publisher(GripperStatus, 'gripper_status_rviz', 10)
+
+        """self._node.create_subscription(PointToPoint_FeedbackMessage,
+            "PTP_action/_action/feedback",
+            self.action_logs,
+            10)"""
+        
+        """self._node.create_subscription(GoalStatusArray,
+                                       "PTP_action/_action/status",
+                                       self.action_logs,
+                                       10)"""
+        
+        self.subscription_alarms = self._node.create_subscription(
+            DobotAlarmCodes,
+            'dobot_alarms',
+            self.action_logs,
+            10)
 
         # ------------------------------------------------- #
         # Initialize UI element properties and callbacks    #
@@ -179,10 +200,10 @@ class DobotMenu(QWidget):
             bot.set_jog_coordinate_params([100, 100, 100, 100], [100, 100, 100, 100])
 
             # Start homing the robot
-            """command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
+            command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
             subprocess.Popen(
                         command, universal_newlines=True, shell=True,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()"""
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
         # Programming Tab
         self.programmingButtonTeachEE.clicked.connect(self.EE_teach_command)
@@ -220,17 +241,31 @@ class DobotMenu(QWidget):
         self.MoveJCommand.toggled.connect(lambda:self.framestate_programming_tab_movement(self.MoveJCommand))
         self.MoveLCommand.toggled.connect(lambda:self.framestate_programming_tab_movement(self.MoveLCommand))
 
-
+        # -----------------------------------------------------------------------------
         # Drawing tab
         self.DrawingButtonTeachArc.clicked.connect(self.Arc_teach_command)
-        self.DrawXCoordinateSliderCircumference.valueChanged.connect(lambda:self.change_XY_dot(self.DrawXCoordinateSliderCircumference))
-        self.DrawYCoordinateSliderCircumference.valueChanged.connect(lambda:self.change_XY_dot(self.DrawYCoordinateSliderCircumference))
+        self.DrawXCoordinateSliderCircumference.valueChanged.connect(lambda:self.drawing_change_XY_dot(self.DrawXCoordinateSliderCircumference))
+        self.DrawYCoordinateSliderCircumference.valueChanged.connect(lambda:self.drawing_change_XY_dot(self.DrawYCoordinateSliderCircumference))
 
-        self.DrawXCoordinateSliderEnd.valueChanged.connect(lambda:self.change_XY_dot(self.DrawXCoordinateSliderEnd))
-        self.DrawYCoordinateSliderEnd.valueChanged.connect(lambda:self.change_XY_dot(self.DrawYCoordinateSliderEnd))
+        self.DrawXCoordinateSliderEnd.valueChanged.connect(lambda:self.drawing_change_XY_dot(self.DrawXCoordinateSliderEnd))
+        self.DrawYCoordinateSliderEnd.valueChanged.connect(lambda:self.drawing_change_XY_dot(self.DrawYCoordinateSliderEnd))
 
         self.DrawTeachZCoordinateButtonCircumference.clicked.connect(self.teachZCoordinateCircumference)
         self.DrawTeachZCoordinateButtonEnd.clicked.connect(self.teachZCoordinateEnd)
+
+        # Circle tab
+        self.CircleRadiusSlider.valueChanged.connect(lambda:self.circle_change_params(self.CircleRadiusSlider))
+        self.CircleZ_levelSlider.valueChanged.connect(lambda:self.circle_change_params(self.CircleZ_levelSlider))
+
+        self.CircleButtonTeach.clicked.connect(self.circle_teach_command)
+
+        # -----------------------------------------------------------------------------
+        # Logger tab
+
+        self.clearLogs.clicked.connect(self.clear_logs)
+        self.loggercmd.textChanged.connect(lambda:self.logs_save_command(self.loggercmd))
+        self.update_logs(self.loggercmd) # Load existing logs from previous sessions
+        self.loggerLineEditLogsFile.textChanged.connect(lambda:self.logs_load_command(self.loggercmd))
 
         # ------------------------------------------------- #
         # --- QGraphicsView/Scene setup for 2D grid tab --- #
@@ -305,7 +340,14 @@ class DobotMenu(QWidget):
         if self.dobotJoints is not None:
             self.update_line_position()
 
-    def change_XY_dot(self, field):
+    def circle_change_params(self, field):
+        if field.objectName() == "CircleRadiusSlider":
+            self.CircleRadiusAxis.setText(str(self.CircleRadiusSlider.value()))
+        if field.objectName() == "CircleZ_levelSlider":
+            self.CircleZ_levelAxis.setText(str(self.CircleZ_levelSlider.value()))
+        
+
+    def drawing_change_XY_dot(self, field):
         if field.objectName() == "DrawXCoordinateSliderCircumference":
             self.DrawXCoordinateAxisCircumference.setText(str(self.DrawXCoordinateSliderCircumference.value()))
         if field.objectName() == "DrawYCoordinateSliderCircumference":
@@ -318,6 +360,7 @@ class DobotMenu(QWidget):
 
     def teachZCoordinateCircumference(self):
         self.DrawZCoordinateAxisCircumference.setText(str(round(self.dobotPose[2], 3)))
+        self._node.get_logger().info(f"Updating line position with joint states: {self.dobotJoints}")
     
     def teachZCoordinateEnd(self):
         self.DrawZCoordinateAxisEnd.setText(str(round(self.dobotPose[2], 3)))
@@ -512,29 +555,6 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-    def Arc_teach_command(self):
-        # -------------------------- #
-        # Teach the pose in Arc      #
-        # -------------------------- #
-        circumference_point = [self.DrawXCoordinateAxisCircumference.text(), 
-                               self.DrawYCoordinateAxisCircumference.text(), 
-                               self.DrawZCoordinateAxisCircumference.text(), 
-                               0.0]
-        ending_point = [self.DrawXCoordinateAxisEnd.text(), 
-                               self.DrawYCoordinateAxisEnd.text(), 
-                               self.DrawZCoordinateAxisEnd.text(), 
-                               0.0]
-        command_file = self.programmingLineEditCommandPath.text()
-        #command_path = '/home/vboxuser/ws_magician/src/dobot_menu/resource/commands/commands.bash'
-        command_motion = "{circumference_point: " + str(circumference_point) + ", ending_point: " + str(ending_point) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
-        command_cmd = "ros2 action send_goal /Arc_action dobot_msgs/action/ArcMotion " + "\\\"" + command_motion +  "\\\"" + " --feedback"
-        command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
-        
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
-
     def EE_teach_command(self):
         # -------------------------- #
         # Teach end-effector command #
@@ -582,11 +602,50 @@ class DobotMenu(QWidget):
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+
+    def Arc_teach_command(self):
+        # -------------------------- #
+        # Teach the pose in Arc      #
+        # -------------------------- #
+        circumference_point = [self.DrawXCoordinateAxisCircumference.text(), 
+                               self.DrawYCoordinateAxisCircumference.text(), 
+                               self.DrawZCoordinateAxisCircumference.text(), 
+                               0.0]
+        ending_point = [self.DrawXCoordinateAxisEnd.text(), 
+                               self.DrawYCoordinateAxisEnd.text(), 
+                               self.DrawZCoordinateAxisEnd.text(), 
+                               0.0]
+        command_file = self.programmingLineEditCommandPath.text()
+        #command_path = '/home/vboxuser/ws_magician/src/dobot_menu/resource/commands/commands.bash'
+        command_motion = "{circumference_point: " + str(circumference_point) + ", ending_point: " + str(ending_point) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
+        command_cmd = "ros2 action send_goal /Arc_action dobot_msgs/action/ArcMotion " + "\\\"" + command_motion +  "\\\"" + " --feedback"
+        command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
+        subprocess.Popen(
+                    command, universal_newlines=True, shell=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
+        
+        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+
+    def circle_teach_command(self):
+        target_pose = self.dobotPose
+        radius = self.CircleRadiusAxis.text()
+        z_level = self.CircleZ_levelAxis.text()
+
+        command_file = self.programmingLineEditCommandPath.text()
+        command_motion = "{target_pose: " + str(target_pose) + ", radius: " + str(radius) + ", z_level: " + str(z_level) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
+        command_cmd = "ros2 action send_goal /draw_circle dobot_msgs/action/DrawCircle " + "\\\"" + command_motion +  "\\\"" + " --feedback"
+        command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
+        subprocess.Popen(
+                    command, universal_newlines=True, shell=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
+                
+        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
     
     def execute_command(self):
         # ------------------- #
         # Execute the code    #
         # ------------------- #
+        self.write_logs("Pressing execute")
         command_file = self.programmingLineEditCommandPath.text()
         #command = 'bash ~/ws_magician/src/dobot_menu/resource/commands/commands.bash'
         command = 'bash ' + self.import_path + '/' + command_file
@@ -637,14 +696,98 @@ class DobotMenu(QWidget):
         # ------------------- #
         # Save code to file   #
         # ------------------- #
-        command_file = self.programmingLineEditCommandPath.text()
+        self.log_file = self.programmingLineEditCommandPath.text()
         code = widget.toPlainText()
         try:
-            with open(self.import_path + '/' + command_file, 'w') as file:
+            with open(self.import_path + '/' + self.log_file, 'w') as file:
                 file.write(code)
         except Exception as e:
             self.programmingLineEditCode.setText(f"Error saving file: {e}")
-            
+
+    def update_logs(self, widget):
+        # --------------------------------------------------- #
+        # Updates logs on dobot_menu/resource/logs/logs.txt   #
+        # --------------------------------------------------- #
+        self.log_file = self.loggerLineEditLogsFile.text()
+
+        try:
+            with open(self.log_path + '/' + self.log_file, 'r') as file:
+                code = file.read()
+                widget.setText(code)
+        except Exception as e:
+            pass
+
+    def write_logs(self, message):
+        # -------------------------- #
+        # Writes message to display  #
+        # -------------------------- #
+        self.loggercmd.append(message)
+    
+    def clear_logs(self):
+        # ---------------------------- #
+        # Clears text in to logs.txt   #
+        # ---------------------------- #
+        self.loggercmd.setText(f"Logs of {self.log_file} have been cleared.")
+
+    def logs_save_command(self, widget):
+        # ------------------- #
+        # Save code to file   #
+        # ------------------- #
+        self.log_file = self.loggerLineEditLogsFile.text()
+        logs = widget.toPlainText()
+        try:
+            with open(self.log_path + '/' + self.log_file, 'w') as file:
+                file.write(logs)
+        except Exception as e:
+            pass
+
+    def logs_load_command(self, widget):
+        # ---------------------- #
+        # Load logs to display   #
+        # ---------------------- #
+        self.log_file = self.loggerLineEditLogsFile.text()
+        try:
+            with open(self.log_path + '/' + self.log_file, 'r') as file:
+                logs = file.read(logs)
+                widget.setText(logs) # self.programmingLineEditCode
+        except Exception as e:
+            widget.setText(f"Error loading file: {e}")
+
+    def action_logs(self, msg):
+        # Reformat alarm codes into bracket array
+        alarm = []
+        for i in range(len(msg.alarms_list)):
+            alarm.append(msg.alarms_list[i])
+
+        # Provide explaination for alarm codes
+        alarm_codes = []
+        for i in range(len(alarm)):
+            if alarm[i] == 40:
+                alarm_codes.append("axis 1 positive limit")
+            elif alarm[i] == 41:
+                alarm_codes.append("axis 1 negative limit")
+            elif alarm[i] == 42:
+                alarm_codes.append("axis 2 positive limit")
+            elif alarm[i] == 43:
+                alarm_codes.append("axis 2 negative limit")
+            elif alarm[i] == 44:
+                alarm_codes.append("axis 3 positive limit")
+            elif alarm[i] == 45:
+                alarm_codes.append("axis 3 negative limit")
+            elif alarm[i] == 46:
+                alarm_codes.append("axis 4 positive limit")
+            elif alarm[i] == 47:
+                alarm_codes.append("axis 4 negative limit")
+            elif alarm[i] == 48:
+                alarm_codes.append("Parallelogram Positive Limitation Alarm")
+            elif alarm[i] == 49:
+                alarm_codes.append("Parallelogram Negative Limitation Alarm")
+            else:
+                alarm_codes.append("Other Alarm (check documentation)")
+
+        # If any alarms occur
+        if msg.alarms_list:
+            self.write_logs(f"Alarm codes: {alarm}, {alarm_codes}")
 
     def button_clicked_EStopButton(self):
         bot.stop_queue(force=True) 

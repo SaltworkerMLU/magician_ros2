@@ -3802,6 +3802,161 @@
             <attribute name="title">
               <string>Circle</string>
             </attribute>
+
+            <!-- Add layout widget to window -->
+            <widget class="QWidget" name="layoutWidget">
+              <property name="geometry">
+                <rect>
+                  <x>10</x>
+                  <y>50</y>
+                  <width>331</width>
+                  <height>75</height>
+                </rect>
+              </property>
+              <layout class="QGridLayout" name="DrawXYLayout">
+
+              <!-- Circle radius LABEL -->
+              <item row="0" column="0">
+                <widget class="QLabel" name="CircleRadiusLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Radius: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Circle z_level LABEL -->
+              <item row="1" column="0">
+                <widget class="QLabel" name="CircleZ_levelLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Z_level: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Circle radius axis -->
+              <item row="0" column="1">
+                <widget class="QLabel" name="CircleRadiusAxis">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>25</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                    <!-- <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set> -->
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Circle z_level axis -->
+              <item row="1" column="1">
+                <widget class="QLabel" name="CircleZ_levelAxis">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>-74</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Circle radius SLIDER -->
+              <item row="0" column="2">
+                <widget class="QSlider" name="CircleRadiusSlider">
+                  <property name="minimum">
+                    <number>1</number>
+                  </property>
+                  <property name="maximum">
+                    <number>50</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>25</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Circle z_level SLIDER -->
+              <item row="1" column="2">
+                <widget class="QSlider" name="CircleZ_levelSlider">
+                  <property name="minimum">
+                    <number>-125</number>
+                  </property>
+                  <property name="maximum">
+                    <number>170</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>-74</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+            </layout>
+
+          </widget>
+
+            <!-- Circle BUTTON teach movement -->
+            <widget class="QPushButton" name="CircleButtonTeach">
+              <property name="geometry">
+                <rect>
+                  <x>95</x>
+                  <y>220</y>
+                  <width>110</width>
+                  <height>50</height>
+                </rect>
+              </property>
+              <property name="text">
+                <string>Teach (Circle)</string>
+              </property>
+            </widget>
+
           </widget>
 
         </widget>
@@ -3932,6 +4087,27 @@
           <string>Logger</string>
         </attribute>
 
+        <!-- Add logo at top left corner -->
+        <widget class="QLabel" name="InfoIcon">
+          <property name="geometry">
+            <rect>
+              <x>10</x>
+              <y>10</y>
+              <width>51</width>
+              <height>51</height>
+            </rect>
+          </property>
+          <property name="text">
+            <string/>
+          </property>
+          <property name="pixmap">
+            <pixmap>images/logs_icon.png</pixmap>
+          </property>
+          <property name="scaledContents">
+            <bool>true</bool>
+          </property>
+        </widget>
+
         <!-- 
         Add Text next to question mark logo saying:
         "logger"
@@ -3957,7 +4133,70 @@
           </property>
         </widget>
 
-        <!-- Programming LINE EDIT code display -->
+        <!-- Button to clear logs -->
+        <widget class="QPushButton" name="clearLogs">
+          <property name="geometry">
+            <rect>
+              <x>300</x>
+              <y>20</y>
+              <width>110</width>
+              <height>50</height>
+            </rect>
+          </property>
+          <property name="text">
+            <string>Clear logs</string>
+          </property>
+        </widget>
+
+        <!-- Logger TEXT of logs file -->
+        <widget class="QLabel" name="loggerLabelLogsFile">
+          <property name="geometry">
+            <rect>
+              <x>500</x>
+              <y>20</y>
+              <width>200</width>
+              <height>20</height>
+            </rect>
+          </property>
+          <property name="font">
+            <font>
+              <pointsize>10</pointsize>
+              <weight>75</weight>
+              <bold>true</bold>
+            </font>
+          </property>
+          <property name="text">
+            <string>Enter file name here:</string>
+          </property>
+        </widget>
+
+        <!-- Loger LINE EDIT log file -->
+        <widget class="QLineEdit" name="loggerLineEditLogsFile">
+          <property name="geometry">
+            <rect>
+              <x>500</x>
+              <y>50</y>
+              <width>200</width>
+              <height>20</height>
+            </rect>
+          </property>
+          <property name="font">
+            <font>
+              <pointsize>10</pointsize>
+            </font>
+          </property>
+          <property name="placeholderText">
+            <string>Type file name here...</string>
+          </property>
+          <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+          <property name="text">
+            <string>logs.txt</string>
+          </property>
+        </widget>
+
+        <!-- The logs are displayed here -->
         <widget class="QTextEdit" name="loggercmd">
           <property name="geometry">
             <rect>
@@ -3972,14 +4211,8 @@
               <pointsize>5</pointsize>
             </font>
           </property>
-          <property name="readOnly">
-            <bool>true</bool>
-          </property>
           <property name="styleSheet">
             <string notr="true">background-color: rgb(255, 255, 255);</string>
-          </property>
-          <property name="placeholderText">
-            <string>Logs will be posted here...</string>
           </property>
         </widget>
 

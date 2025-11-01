@@ -18,7 +18,8 @@ setup(
         ('share/' + package_name, ['plugin.xml']),
         ('share/' + package_name + '/resource/images', glob('resource/images/*.png')),
         ('share/' + package_name + '/resource/images', glob('resource/images/*.svg')),
-        ('share/' + package_name + '/resource/commands', glob('resource/commands/*.bash'))
+        ('share/' + package_name + '/resource/commands', glob('resource/commands/*.bash')),
+        ('share/' + package_name + '/resource/logs', glob('resource/logs/*.txt'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,

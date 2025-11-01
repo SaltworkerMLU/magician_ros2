@@ -10,29 +10,10 @@
 
 ## Table of contents :clipboard:
 * [Installation](#installation)
+* [How to start up the source code (src)](#startup)
 * [Command API](#commands)
 * [Motion](#motion)
 * [Visualization in RViz](#visualization)
-* [Additional tools for visualization](#additional)
-
-<!-- 
-<a name="packages"></a>
-## Packages in the repository :open_file_folder:
-
-  - `dobot_bringup` - launch files and parameters configuration (in _YAML_ files)
-  - `dobot_control_panel` - RQT plugin to control Dobot Magician robotic arm (as well as sliding rail)
-  - `dobot_demos` - a collection of sample scripts for beginners (_minimal working examples_)
-  - `dobot_description` - package containing URDF description of Dobot Magician together with meshes
-  - `dobot_diagnostics` - aggregation and analysis of alarm states
-  - `dobot_driver` - low-level Python interface to communicate with Dobot via serial port 
-  - `dobot_end_effector` - set of service servers allowing to control different kinds of end effectors
-  - `dobot_homing` - tool for executing homing procedure of Dobot stepper motors
-  - `dobot_kinematics` -  implementation of forward and inverse kinematics to validate trajectory feasibility
-  - `dobot_motion` - package containing action server to control motion of Dobot Magician (joint interpolated motion / linear motion)
-  - `dobot_msgs` -  package defining messages used by control stack
-  - `dobot_state_updater` - package containing a node regularly retrieving information about the state of the robot (e.g. joint angles / TCP position)
-  - `dobot_visualization_tools` - useful tools for visualization (e.g. trajectory / range) in form of RViZ markers 
--->
 
 <a name="installation"></a>
 ## Installation :arrow_down:
@@ -85,13 +66,18 @@ After rebooting linux, copy the following into your terminal:
 cd ~/ws_magician
 colcon build
 ```
-*Building using **colcon build** from the wrong folder will cause the build to not load when prompted*. Afterwards, close the terminal.
+*Building using **colcon build** from the wrong folder will cause the build to not load when prompted*.
 
-At this point, you can open your linux terminal (in case you are using WSL2, create a shortcut to **terminal/dobot_bootup.bat** to run it from windows).
+*If you are using WSL2, open a **command prompt** and run the command* `cp ~/ws_magician/src/terminal/usb2WSL_dobot.bat /mnt/c/users/YOUR_USERNAME/Desktop` *to copy the windows batch file used to connect the dobot magician via usb to WSL2 into the desktop folder.*
 
-If you are not using the auto bootup option, simply run the bash file **terminal/dobot_bootup.bash**. 
+<a name="startup"></a>
+## How to start up the source code (src)
 
-#### If you want to edit the source code, simply open a linux terminal, navigate to ~/YOUR_FOLDER, and then type `code .`. This will open Visual Studio Code and install it if not done.
+*If you are using WSL2, run the windows batch file **usb2WSL_dobot.bat** to connect the Dobot Magician to WSL2, enabling it to be used with the src.*
+
+After installing and building everything, open a **linux terminal** and run the command `bash ~/ws_magician/src/terminal/dobot_bootup.bash`.
+
+#### If you want to edit the source code, simply open a linux terminal, navigate to ~/ws_magician, and then type `code .`. This will open Visual Studio Code and install it if not done. After editing the code, use `colcon build` to build your revamped version of the src.
 
 <a name="commands"></a>
 ## A list of commands you can run with the source code
@@ -113,11 +99,12 @@ Service command | description
 Action command | description
 --- | --- |
 `ros2 action send_goal /PTP_action  dobot_msgs/action/PointToPoint "{motion_type: 1, target_pose: [150.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Trajects the dobot towards the specified target_pose and motion_type.
-`ros2 action send_goal /Arc_action  dobot_msgs/action/ArcMotion "{circumference_point: [175.0, 25.0, 100.0, 0.0], ending_point: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Trajects the dobot toward the specified ending_point via. the circumference_point, resulting in a curved arc-like movement
+`ros2 action send_goal /Arc_action  dobot_msgs/action/ArcMotion "{circumference_point: [175.0, 25.0, 100.0, 0.0], ending_point: [200.0, 0.0, 100.0, 0.0], velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Trajects the dobot toward the specified ending_point via. the circumference_point, resulting in a curved arc-like movement.
+`ros2 action send_goal /draw_circle dobot_msgs/action/DrawCircle "{target_pose: [150, 0, 100, 0], radius: 25, z_level: -74, velocity_ratio: 0.5, acceleration_ratio: 0.3}" --feedback` | Draws a horizontal circle. Use this command with the pen gripper.
 
 **Adding `--feedback` flag will cause the terminal to display the current position of the robot while it is moving**
 
-Other command | image
+Other commands | image
 --- | --- |
 `rqt -s rqt_robot_monitor` | <img src="https://user-images.githubusercontent.com/80155305/220293202-d1320648-719d-4e3c-a592-52e8607d3838.png" width="240" height="250"/> <img src="https://user-images.githubusercontent.com/80155305/220293214-8e07c4ef-67fa-40c1-a562-7c97e81730ff.png" width="166" height="250"/>
 `rqt -s dobot_menu` | <img src=".github/images/dobot_menu_control.png" width="350" height="400"/>
@@ -126,7 +113,10 @@ Other command | image
 <a name="motion"></a>
 ## Motion
 
-### PTP
+### Point-To-Point (PTP)
+The PTP command either takes the most efficient path from A to B using the path of least resistance of each joint (MoveJ) or the linearly speaking shortest path (MoveL).
+
+Because of this, using PTP with the Dobot Magician is categorized into "motion types" as described below:
 
 motion_type | Coordinates | movement type
 --- | --- | --- |
@@ -141,6 +131,9 @@ motion_type | Coordinates | movement type
 * **acceleration_ratio** (default 1.0)  
 
 ### Arc
+The Arc command makes the dobot magician move in a circular arc-like movement as shown with the figure below:
+
+<img src=".github/images/moveC_sketch.jpg"/>
 
 <a name="visualization"></a>
 ## Visualization in RViz
@@ -160,50 +153,18 @@ Below you will find 3 sample visualizations:
 
 <a name="dmcp"></a>
 ## Dobot Magician Menu
-Dobot Magician Menu is an RQT plugin that allows you to conveniently position the manipulator, visualize its state, modify motion parameters and control end effectors. Below you will find screenshots of all the plugin screens:
+Dobot Magician Menu is an RQT plugin that allows you to do pretty much everything you need to do with the dobot: 
+* Position the manipulator and modify motion parameters
+* Visualize its state
+* Control end effectors
+* Program instructions into the dobot using bash programming
+
+Below you will find screenshots of all the plugin screens:
 
 <p align="center">
-  <img src=".github/images/dobot_menu_control.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/220214179-14b4493f-4dd0-4de5-89fc-d8c60e9d4d8b.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_speed.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp
+  <img src=".github/images/dobot_menu_control.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_speed.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_tool.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp
 </p> 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/80155305/220214189-8eb57aca-bed8-4b55-a3fc-25244a41e721.png" width="250" height="230"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://user-images.githubusercontent.com/80155305/212384115-3875164a-3717-465e-a3cc-cda9b8913ea6.png" width="250" height="230"/>
+  <img src=".github/images/dobot_menu_programming.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_info.png" width="250" height="300"/>&nbsp;&nbsp;&nbsp;&nbsp;<img src=".github/images/dobot_menu_logger.png" width="250" height="300"/>
 </p> 
-
-<a name="additional"></a>
-## Additional tools for visualization
-The **dobot_visualization_tools** package provides visualization tools in form of RViz markers.  
-1. Camera field of view (FOV) for Intel Realsense D435i (published at `/realsense_FOV` topic)
-```
-ros2 run dobot_visualization_tools show_camera_FOV
-```
-2. Workspace visualization (published at `/reachability_range` topic) - range without end effector attached.
-```
-ros2 run dobot_visualization_tools show_dobot_range
-```
-3. TCP trajectory (published at `/TCP_trajectory` topic) - trajectory markers are removed after 2 seconds of the manipulator's stationary state, so as not to slow RViz down with too many markers it needs to display. 
-```
-ros2 run dobot_visualization_tools show_trajectory
-```
-4. Interactive Markers - you can select the target position of the tool end (x, y, z, r) by moving the interactive marker in RViz. Once the target is selected, right-click on the yellow sphere and select the motion type from the menu. When running a node that allows control using interactive markers, two parameters must be specified (see example below) that define the point at the end of the tool in the coordinate system associated with the last link of the manipulator. 
-```
-ros2 run dobot_visualization_tools int_marker --ros-args -p TCP_x_offset:=0.059 -p  TCP_z_offset:=-0.12
-```
-
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/80155305/212383385-e9c2ca38-8cfa-4ac9-a106-99d2663ce629.png" width="220" height="220"/><img src="https://user-images.githubusercontent.com/80155305/212384560-198f5b65-b248-428d-baad-bf75c6909542.png" width="330" height="220"/>
-</p> 
-
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/80155305/212383482-6fa7b2c5-1bc1-4f0a-a118-a93dbc788a94.png" width="250" height="250"/><img src="https://user-images.githubusercontent.com/80155305/220213781-8e1b593d-4865-424c-9631-87724acba8d6.png" width="250" height="250"/>
-</p> 
-
-<video controls width="250">
-    <source src="https://user-images.githubusercontent.com/80155305/219739487-8edd727b-aee9-4f14-b7c3-1d6c78ce2d4d.mp4">
-</video>
-
-
-
-
-
-<a name="examples"></a>

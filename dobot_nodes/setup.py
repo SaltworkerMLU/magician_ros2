@@ -35,7 +35,6 @@ setup(
             'trajectory_validator_server = dobot_nodes.trajectory_validator_server:main',
             'PTP_server = dobot_nodes.PTP_server:main',
             'sliding_rail_server = dobot_nodes.sliding_rail_server:main',
-            'CP_server = dobot_nodes.CP_server:main',
         ],
     },
 )
