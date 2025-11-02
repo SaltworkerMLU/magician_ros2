@@ -16,13 +16,13 @@ from threading import Thread
 from dobot_msgs.srv import EvaluatePTPTrajectory
 from dobot_msgs.msg import DobotAlarmCodes
 from std_msgs.msg import Float64MultiArray
-from dobot_nodes._goal_callback_action import goal_callback_action, cancel_callback_action, execute_callback_action
+from dobot_nodes._callback_action import goal_callback_action, cancel_callback_action, execute_callback_action
 
 class DobotPTPServer(Node):
     
     # Make functions into class methods
-    execute_callback = execute_callback_action
-    goal_callback = goal_callback_action
+    execute_callback_action = execute_callback_action
+    goal_callback_action = goal_callback_action
     cancel_callback = cancel_callback_action
 
     def __init__(self):
@@ -188,6 +188,42 @@ class DobotPTPServer(Node):
             self.active_alarms = False
         else:
             self.active_alarms = True
+    
+    def goal_callback(self, goal_request):
+        self.target = goal_request.target_pose
+        self.motion_type = goal_request.motion_type
+
+        # Check if trajectory is feasible within robot workspace
+        validation_response = self.send_request_check_trajectory(self.target, self.motion_type)
+        if validation_response.is_valid == False:
+            self.get_logger().warn("Goal rejected: {0}".format(validation_response))
+            return GoalResponse.REJECT
+        
+        self.get_logger().info("Result of calling validation service: is valid? {0}, description: {1}".format(validation_response.is_valid, validation_response.message))
+        
+        self.get_logger().info('Goal: {0}'.format(self.target))
+        self.get_logger().info('Mode: {0}'.format(self.motion_type))
+
+        _goalResponse = self.goal_callback_action(goal_request)
+
+        # Check if motion type is a valid one
+        if self.motion_type not in self.motion_types_list:
+            self.get_logger().info('The motion mode you specified does not exist!')
+            return GoalResponse.REJECT
+
+        return _goalResponse
+    
+    def execute_callback(self, goal_handle):
+        bot.set_point_to_point_command(self.motion_type, self.target[0], self.target[1], self.target[2], self.target[3])
+        feedback_msg = PointToPoint.Feedback()
+        feedback_msg.current_pose = [0.0, 0.0, 0.0, 0.0]
+        self.pose_arr = []
+
+        result = PointToPoint.Result()
+
+        self.execute_callback_action(goal_handle, result, feedback_msg)
+
+        return result
 
     def destroy(self):
         self._action_server.destroy()   # Destroy the instance of the action

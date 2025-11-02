@@ -17,7 +17,7 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/ArcMotion.action"
-  "action/DrawCircle.action"
+  "action/DrawPolygon.action"
   "action/PointToPoint.action"
   "action/ContinuousTrajectory.action"
   "action/SlidingRail.action"

@@ -25,7 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'arc_server = dobot_nodes.arc_server:main',
-            'draw_circle_server = dobot_nodes.draw_circle_server:main',
+            'draw_polygon_server = dobot_nodes.draw_polygon_server:main',
             'alarms_parser = dobot_nodes.alarms_parser:main',
             'state_publisher = dobot_nodes.dobot_state_publ:main',
             'gripper_server = dobot_nodes.gripper_server:main',
@@ -35,7 +35,6 @@ setup(
             'trajectory_validator_server = dobot_nodes.trajectory_validator_server:main',
             'PTP_server = dobot_nodes.PTP_server:main',
             'sliding_rail_server = dobot_nodes.sliding_rail_server:main',
-            'CP_server = dobot_nodes.CP_server:main',
         ],
     },
 )
