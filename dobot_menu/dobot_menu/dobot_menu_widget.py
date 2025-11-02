@@ -191,6 +191,12 @@ class DobotMenu(QWidget):
         self.ZAccSlider.sliderReleased.connect(lambda:self.change_vel_cartesian(self.ZAccSlider))
         self.RAccSlider.sliderReleased.connect(lambda:self.change_vel_cartesian(self.RAccSlider))
 
+        # Tool Tab
+        self.GripperOpen.pressed.connect(self.open_gripper)
+        self.GripperClose.pressed.connect(self.close_gripper)
+        self.SuctionCupTurnOn.pressed.connect(self.turn_on_suction_cup)
+        self.SuctionCupTurnOff.pressed.connect(self.turn_off_suction_cup)
+
         # -----------------------------------------------------------------------------
         
         # initial setup (REMEMBER ACCELERATION)
@@ -204,6 +210,8 @@ class DobotMenu(QWidget):
             subprocess.Popen(
                         command, universal_newlines=True, shell=True,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        else:
+            self.write_logs("Dobot Magician is not connected. Please restart this application after connecting the Dobot.")
 
         # Programming Tab
         self.programmingButtonTeachEE.clicked.connect(self.EE_teach_command)
@@ -221,7 +229,9 @@ class DobotMenu(QWidget):
 
         self.programmingButtonTeachPTP.clicked.connect(self.PTP_teach_command)
 
-        self.programmingButtonExecute.clicked.connect(self.execute_command)
+        if self.is_connected:
+            self.programmingButtonExecute.clicked.connect(self.execute_command)
+
         self.programmingButtonExport.clicked.connect(self.export_command)
         self.programmingButtonImport.clicked.connect(self.import_command)
 
@@ -253,19 +263,21 @@ class DobotMenu(QWidget):
         self.DrawTeachZCoordinateButtonCircumference.clicked.connect(self.teachZCoordinateCircumference)
         self.DrawTeachZCoordinateButtonEnd.clicked.connect(self.teachZCoordinateEnd)
 
-        # Circle tab
-        self.CircleRadiusSlider.valueChanged.connect(lambda:self.circle_change_params(self.CircleRadiusSlider))
-        self.CircleZ_levelSlider.valueChanged.connect(lambda:self.circle_change_params(self.CircleZ_levelSlider))
+        # Polygon tab
+        self.PolygonRadiusSlider.valueChanged.connect(lambda:self.Polygon_change_params(self.PolygonRadiusSlider))
+        self.PolygonZ_levelSlider.valueChanged.connect(lambda:self.Polygon_change_params(self.PolygonZ_levelSlider))
+        self.PolygonSidesSlider.valueChanged.connect(lambda:self.Polygon_change_params(self.PolygonSidesSlider))
+        self.PolygonThetaSlider.valueChanged.connect(lambda:self.Polygon_change_params(self.PolygonThetaSlider))
 
-        self.CircleButtonTeach.clicked.connect(self.circle_teach_command)
+        self.PolygonButtonTeach.clicked.connect(self.Polygon_teach_command)
 
         # -----------------------------------------------------------------------------
         # Logger tab
 
         self.clearLogs.clicked.connect(self.clear_logs)
         self.loggercmd.textChanged.connect(lambda:self.logs_save_command(self.loggercmd))
-        self.update_logs(self.loggercmd) # Load existing logs from previous sessions
         self.loggerLineEditLogsFile.textChanged.connect(lambda:self.logs_load_command(self.loggercmd))
+        self.logs_load_command(self.loggercmd) # Load existing logs from previous sessions
 
         # ------------------------------------------------- #
         # --- QGraphicsView/Scene setup for 2D grid tab --- #
@@ -335,16 +347,25 @@ class DobotMenu(QWidget):
         self.EndDot.setBrush(QBrush(Qt.darkRed, Qt.SolidPattern))
         self.sceneTop.addItem(self.EndDot)
 
+        if not self.is_connected: # This is the drawing tab
+            self.EEDrawDot.hide()
+            self.CDot.hide()
+            self.EndDot.hide()
+
 
     def _on_line_update_timer(self):
         if self.dobotJoints is not None:
             self.update_line_position()
 
-    def circle_change_params(self, field):
-        if field.objectName() == "CircleRadiusSlider":
-            self.CircleRadiusAxis.setText(str(self.CircleRadiusSlider.value()))
-        if field.objectName() == "CircleZ_levelSlider":
-            self.CircleZ_levelAxis.setText(str(self.CircleZ_levelSlider.value()))
+    def Polygon_change_params(self, field):
+        if field.objectName() == "PolygonRadiusSlider":
+            self.PolygonRadiusAxis.setText(str(self.PolygonRadiusSlider.value()))
+        if field.objectName() == "PolygonZ_levelSlider":
+            self.PolygonZ_levelAxis.setText(str(self.PolygonZ_levelSlider.value()))
+        if field.objectName() == "PolygonSidesSlider":
+            self.PolygonSidesAxis.setText(str(self.PolygonSidesSlider.value()))
+        if field.objectName() == "PolygonThetaSlider":
+            self.PolygonThetaAxis.setText(str(self.PolygonThetaSlider.value()))
         
 
     def drawing_change_XY_dot(self, field):
@@ -486,59 +507,64 @@ class DobotMenu(QWidget):
             
 
     def JT_IDLE(self):
-        if self.frame == "base":
-            bot.set_jog_command(0, 0)
-        elif self.frame == "joint":
-            bot.set_jog_command(1, 0)
+        if self.is_connected:
+            if self.frame == "base":
+                bot.set_jog_command(0, 0)
+            elif self.frame == "joint":
+                bot.set_jog_command(1, 0)
 
         
     def JT1_move(self, sign):
-        if sign.text() == "+":
-            if self.frame == "base":
-                bot.set_jog_command(0, 1)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 1)
-        elif sign.text() == "-":
-            if self.frame == "base":
-                bot.set_jog_command(0, 2)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 2)
+        if self.is_connected:
+            if sign.text() == "+":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 1)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 1)
+            elif sign.text() == "-":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 2)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 2)
 
     def JT2_move(self, sign):
-        if sign.text() == "+":
-            if self.frame == "base":
-                bot.set_jog_command(0, 3)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 3)
-        elif sign.text() == "-":
-            if self.frame == "base":
-                bot.set_jog_command(0, 4)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 4)
+        if self.is_connected:
+            if sign.text() == "+":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 3)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 3)
+            elif sign.text() == "-":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 4)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 4)
 
     def JT3_move(self, sign):
-        if sign.text() == "+":
-            if self.frame == "base":
-                bot.set_jog_command(0, 5)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 5)
-        elif sign.text() == "-":
-            if self.frame == "base":
-                bot.set_jog_command(0, 6)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 6)
+        if self.is_connected:
+            if sign.text() == "+":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 5)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 5)
+            elif sign.text() == "-":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 6)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 6)
 
     def JT4_move(self, sign):
-        if sign.text() == "+":
-            if self.frame == "base":
-                bot.set_jog_command(0, 7)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 7)
-        elif sign.text() == "-":
-            if self.frame == "base":
-                bot.set_jog_command(0, 8)
-            elif self.frame == "joint":
-                bot.set_jog_command(1, 8)
+        if self.is_connected:
+            if sign.text() == "+":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 7)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 7)
+            elif sign.text() == "-":
+                if self.frame == "base":
+                    bot.set_jog_command(0, 8)
+                elif self.frame == "joint":
+                    bot.set_jog_command(1, 8)
 
     def button_clicked_HomingButton(self):   
         msg = QMessageBox()
@@ -550,10 +576,11 @@ class DobotMenu(QWidget):
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
-        command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if self.is_connected:
+            command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
+            subprocess.Popen(
+                        command, universal_newlines=True, shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
     def EE_teach_command(self):
         # -------------------------- #
@@ -562,16 +589,12 @@ class DobotMenu(QWidget):
 
         if self.gripperType == "gripper" and self.gripperClose == True:
             command_cmd = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "close", keep_compressor_running: false}"'
-            self.send_gripper_state("opened")
         elif self.gripperType == "gripper" and self.gripperClose == False:
             command_cmd = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "open", keep_compressor_running: false}"'
-            self.send_gripper_state("opened")
         elif self.gripperType == "suctionCup" and self.suctionCupOn == True:
             command_cmd = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"'
-            self.send_gripper_state("opened")
         elif self.gripperType == "suctionCup" and self.suctionCupOn == False:
             command_cmd = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
-            self.send_gripper_state("opened")
         
         command_file = self.programmingLineEditCommandPath.text()
         command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
@@ -626,14 +649,16 @@ class DobotMenu(QWidget):
         
         self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
 
-    def circle_teach_command(self):
+    def Polygon_teach_command(self):
         target_pose = self.dobotPose
-        radius = self.CircleRadiusAxis.text()
-        z_level = self.CircleZ_levelAxis.text()
+        radius = self.PolygonRadiusAxis.text()
+        z_level = self.PolygonZ_levelAxis.text()
+        sides = self.PolygonSidesAxis.text()
+        theta = self.PolygonThetaAxis.text()
 
         command_file = self.programmingLineEditCommandPath.text()
-        command_motion = "{target_pose: " + str(target_pose) + ", radius: " + str(radius) + ", z_level: " + str(z_level) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
-        command_cmd = "ros2 action send_goal /draw_circle dobot_msgs/action/DrawCircle " + "\\\"" + command_motion +  "\\\"" + " --feedback"
+        command_motion = "{target_pose: " + str(target_pose) + ", radius: " + str(radius) + ", z_level: " + str(z_level) + ", sides: " + str(sides) + ", theta: " + str(theta) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
+        command_cmd = "ros2 action send_goal /draw_polygon dobot_msgs/action/DrawPolygon " + "\\\"" + command_motion +  "\\\"" + " --feedback"
         command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
         subprocess.Popen(
                     command, universal_newlines=True, shell=True,
@@ -704,19 +729,6 @@ class DobotMenu(QWidget):
         except Exception as e:
             self.programmingLineEditCode.setText(f"Error saving file: {e}")
 
-    def update_logs(self, widget):
-        # --------------------------------------------------- #
-        # Updates logs on dobot_menu/resource/logs/logs.txt   #
-        # --------------------------------------------------- #
-        self.log_file = self.loggerLineEditLogsFile.text()
-
-        try:
-            with open(self.log_path + '/' + self.log_file, 'r') as file:
-                code = file.read()
-                widget.setText(code)
-        except Exception as e:
-            pass
-
     def write_logs(self, message):
         # -------------------------- #
         # Writes message to display  #
@@ -748,10 +760,10 @@ class DobotMenu(QWidget):
         self.log_file = self.loggerLineEditLogsFile.text()
         try:
             with open(self.log_path + '/' + self.log_file, 'r') as file:
-                logs = file.read(logs)
+                logs = file.read()
                 widget.setText(logs) # self.programmingLineEditCode
         except Exception as e:
-            widget.setText(f"Error loading file: {e}")
+            widget.append(f"Error loading file: {e}")
 
     def action_logs(self, msg):
         # Reformat alarm codes into bracket array
@@ -790,12 +802,13 @@ class DobotMenu(QWidget):
             self.write_logs(f"Alarm codes: {alarm}, {alarm_codes}")
 
     def button_clicked_EStopButton(self):
-        bot.stop_queue(force=True) 
+        if self.is_connected:
+            bot.stop_queue(force=True) 
 
-        command = 'ros2 service call /PTP_action/_action/cancel_goal action_msgs/srv/CancelGoal'
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+            command = 'ros2 service call /PTP_action/_action/cancel_goal action_msgs/srv/CancelGoal'
+            subprocess.Popen(
+                        command, universal_newlines=True, shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Warning)
@@ -805,37 +818,42 @@ class DobotMenu(QWidget):
         msg.setWindowTitle("Motion stop")
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
-        bot.clear_alarms_state()
+        if self.is_connected:
+            bot.clear_alarms_state()
 
 
     def open_gripper(self):
-        command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "open", keep_compressor_running: false}"'
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if self.is_connected:
+            command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "open", keep_compressor_running: false}"'
+            subprocess.Popen(
+                        command, universal_newlines=True, shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-        self.send_gripper_state("opened")
+            self.send_gripper_state("opened")
  
     def close_gripper(self):
-        command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "close", keep_compressor_running: false}"'
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if self.is_connected:
+            command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "close", keep_compressor_running: false}"'
+            subprocess.Popen(
+                        command, universal_newlines=True, shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
-        self.send_gripper_state("closed")
+            self.send_gripper_state("closed")
 
 
     def turn_on_suction_cup(self):
-        command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"'
-        subprocess.Popen(
-            command, universal_newlines=True, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if self.is_connected:
+            command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"'
+            subprocess.Popen(
+                command, universal_newlines=True, shell=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
     def turn_off_suction_cup(self):
-        command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
-        subprocess.Popen(
-            command, universal_newlines=True, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        if self.is_connected:
+            command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
+            subprocess.Popen(
+                command, universal_newlines=True, shell=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
     def valuechange_joints(self, field):
         if field.objectName() == "JT1Vel":
@@ -876,27 +894,29 @@ class DobotMenu(QWidget):
             self.RAcc.setText(str(self.RAccSlider.value()))
 
     def change_vel_joints(self, slider):
-        bot.set_jog_joint_params([int(self.Joint1VelSlider.value()), 
-                                  int(self.Joint2VelSlider.value()), 
-                                  int(self.Joint3VelSlider.value()), 
-                                  int(self.Joint4VelSlider.value())], 
+        if self.is_connected:
+            bot.set_jog_joint_params([int(self.Joint1VelSlider.value()), 
+                                    int(self.Joint2VelSlider.value()), 
+                                    int(self.Joint3VelSlider.value()), 
+                                    int(self.Joint4VelSlider.value())], 
 
-                                 [int(self.Joint1AccSlider.value()), 
-                                  int(self.Joint2AccSlider.value()), 
-                                  int(self.Joint3AccSlider.value()), 
-                                  int(self.Joint4AccSlider.value())])
+                                    [int(self.Joint1AccSlider.value()), 
+                                    int(self.Joint2AccSlider.value()), 
+                                    int(self.Joint3AccSlider.value()), 
+                                    int(self.Joint4AccSlider.value())])
 
 
     def change_vel_cartesian(self, slider):
-        bot.set_jog_coordinate_params([int(self.XVelSlider.value()), 
-                                       int(self.YVelSlider.value()), 
-                                       int(self.ZVelSlider.value()), 
-                                       int(self.RVelSlider.value())], 
+        if self.is_connected:
+            bot.set_jog_coordinate_params([int(self.XVelSlider.value()), 
+                                        int(self.YVelSlider.value()), 
+                                        int(self.ZVelSlider.value()), 
+                                        int(self.RVelSlider.value())], 
 
-                                      [int(self.XAccSlider.value()), 
-                                       int(self.YAccSlider.value()), 
-                                       int(self.ZAccSlider.value()), 
-                                       int(self.RAccSlider.value())])
+                                        [int(self.XAccSlider.value()), 
+                                        int(self.YAccSlider.value()), 
+                                        int(self.ZAccSlider.value()), 
+                                        int(self.RAccSlider.value())])
 
 
     def sliding_rail_disconnected(self):

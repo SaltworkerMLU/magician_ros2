@@ -51,9 +51,6 @@ Inside the opening **linux terminal**, paste the following:
 cd ~
 mkdir -p ~/ws_magician/src # Creates directory
 git clone https://github.com/SaltworkerMLU/magician_ros2.git ~/ws_magician/src --branch magician_ros2_MLU
-echo "" >> ~/.bashrc; # Creates empty line
-echo "export MAGICIAN_TOOL=none" >> ~/.bashrc;
-echo "source ~/ws_magician/src/install/setup.bash" >> ~/.bashrc;
 ```
 
 After doing so, paste the following into the **linux terminal**: `bash ~/ws_magician/src/terminal/install_dependencies.bash`
@@ -88,7 +85,7 @@ Example script | description
 `ros2 run dobot_demos test_suction_cup` | Tests suction cup
 `ros2 run dobot_demos test_homing` | Homes the dobot
 `ros2 run dobot_demos test_point_to_point` | Moves to a certain spot using PTP movement
-`ros2 run dobot_demos test_pick_and_place` | Does a sequence of PTP movements whil picking and placing objects in the dobot's way.
+`ros2 run dobot_demos test_pick_and_place` | Does a sequence of PTP movements while picking and placing objects in the dobot's way.
 
 Service command | description
 --- | --- |

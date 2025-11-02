@@ -3798,9 +3798,9 @@
 
           </widget>
 
-          <widget class="QWidget" name="CircleTab">
+          <widget class="QWidget" name="PolygonTab">
             <attribute name="title">
-              <string>Circle</string>
+              <string>Polygon</string>
             </attribute>
 
             <!-- Add layout widget to window -->
@@ -3810,14 +3810,14 @@
                   <x>10</x>
                   <y>50</y>
                   <width>331</width>
-                  <height>75</height>
+                  <height>100</height>
                 </rect>
               </property>
-              <layout class="QGridLayout" name="DrawXYLayout">
+              <layout class="QGridLayout" name="PolygonXYLayout">
 
-              <!-- Circle radius LABEL -->
+              <!-- Polygon radius LABEL -->
               <item row="0" column="0">
-                <widget class="QLabel" name="CircleRadiusLabel">
+                <widget class="QLabel" name="PolygonRadiusLabel">
                   <property name="font">
                     <font>
                       <pointsize>15</pointsize>
@@ -3832,9 +3832,9 @@
                 </widget>
               </item>
 
-              <!-- Circle z_level LABEL -->
+              <!-- Polygon z_level LABEL -->
               <item row="1" column="0">
-                <widget class="QLabel" name="CircleZ_levelLabel">
+                <widget class="QLabel" name="PolygonZ_levelLabel">
                   <property name="font">
                     <font>
                       <pointsize>15</pointsize>
@@ -3849,9 +3849,43 @@
                 </widget>
               </item>
 
-              <!-- Circle radius axis -->
+              <!-- Polygon sides LABEL -->
+              <item row="2" column="0">
+                <widget class="QLabel" name="PolygonSidesLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Sides: </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Polygon sides LABEL -->
+              <item row="3" column="0">
+                <widget class="QLabel" name="PolygonThetaLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>15</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>Theta (°): </string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Polygon radius axis -->
               <item row="0" column="1">
-                <widget class="QLabel" name="CircleRadiusAxis">
+                <widget class="QLabel" name="PolygonRadiusAxis">
                   <property name="minimumSize">
                     <size>
                       <width>50</width>
@@ -3873,9 +3907,9 @@
                 </widget>
               </item>
 
-              <!-- Circle z_level axis -->
+              <!-- Polygon z_level axis -->
               <item row="1" column="1">
-                <widget class="QLabel" name="CircleZ_levelAxis">
+                <widget class="QLabel" name="PolygonZ_levelAxis">
                   <property name="minimumSize">
                     <size>
                       <width>50</width>
@@ -3896,9 +3930,55 @@
                 </widget>
               </item>
 
-              <!-- Circle radius SLIDER -->
+              <!-- Polygon z_level axis -->
+              <item row="2" column="1">
+                <widget class="QLabel" name="PolygonSidesAxis">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>3</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Polygon z_level axis -->
+              <item row="3" column="1">
+                <widget class="QLabel" name="PolygonThetaAxis">
+                  <property name="minimumSize">
+                    <size>
+                      <width>50</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="font">
+                    <font>
+                      <pointsize>10</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>0</string>
+                  </property>
+                  <property name="alignment">
+                    <set>Qt::AlignLeft</set>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Polygon radius SLIDER -->
               <item row="0" column="2">
-                <widget class="QSlider" name="CircleRadiusSlider">
+                <widget class="QSlider" name="PolygonRadiusSlider">
                   <property name="minimum">
                     <number>1</number>
                   </property>
@@ -3917,9 +3997,9 @@
                 </widget>
               </item>
 
-              <!-- Circle z_level SLIDER -->
+              <!-- Polygon z_level SLIDER -->
               <item row="1" column="2">
-                <widget class="QSlider" name="CircleZ_levelSlider">
+                <widget class="QSlider" name="PolygonZ_levelSlider">
                   <property name="minimum">
                     <number>-125</number>
                   </property>
@@ -3938,12 +4018,54 @@
                 </widget>
               </item>
 
+              <!-- Polygon sides SLIDER -->
+              <item row="2" column="2">
+                <widget class="QSlider" name="PolygonSidesSlider">
+                  <property name="minimum">
+                    <number>2</number>
+                  </property>
+                  <property name="maximum">
+                    <number>25</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>3</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
+              <!-- Polygon theta SLIDER -->
+              <item row="3" column="2">
+                <widget class="QSlider" name="PolygonThetaSlider">
+                  <property name="minimum">
+                    <number>0</number>
+                  </property>
+                  <property name="maximum">
+                    <number>360</number>
+                  </property>
+                  <property name="pageStep">
+                    <number>0</number>
+                  </property>
+                  <property name="value">
+                    <number>0</number>
+                  </property>
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                </widget>
+              </item>
+
             </layout>
 
           </widget>
 
-            <!-- Circle BUTTON teach movement -->
-            <widget class="QPushButton" name="CircleButtonTeach">
+            <!-- Polygon BUTTON teach movement -->
+            <widget class="QPushButton" name="PolygonButtonTeach">
               <property name="geometry">
                 <rect>
                   <x>95</x>
@@ -3953,7 +4075,7 @@
                 </rect>
               </property>
               <property name="text">
-                <string>Teach (Circle)</string>
+                <string>Teach (Polygon)</string>
               </property>
             </widget>
 

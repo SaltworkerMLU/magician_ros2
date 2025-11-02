@@ -6,16 +6,10 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    config = os.path.join(
-        get_package_share_directory('dobot_nodes'),
-        'config',
-        'draw_circle.yaml'
-        )
-
     return LaunchDescription([
         Node(
             package='dobot_nodes',
-            executable='draw_circle_server',
+            executable='draw_polygon_server',
             output='screen',
         )
     ])

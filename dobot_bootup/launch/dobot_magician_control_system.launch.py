@@ -116,18 +116,9 @@ def generate_launch_description():
         condition = IfCondition(PythonExpression(valid_tool))
     )
 
-    CP_action =ExecuteProcess(
+    draw_polygon =ExecuteProcess(
         cmd=[[
-            'ros2 ', 'launch ', 'dobot_nodes ', 'dobot_CP.launch.py'
-        ]],
-        shell=True,
-        output='screen',
-        condition = IfCondition(PythonExpression(valid_tool))
-    )
-
-    draw_circle =ExecuteProcess(
-        cmd=[[
-            'ros2 ', 'launch ', 'dobot_nodes ', 'draw_circle.launch.py'
+            'ros2 ', 'launch ', 'dobot_nodes ', 'draw_polygon.launch.py'
         ]],
         shell=True,
         output='screen',
@@ -240,21 +231,11 @@ def generate_launch_description():
         )
     )
 
-    CP_action_event = RegisterEventHandler(
+    draw_polygon_event = RegisterEventHandler(
         OnProcessStart(
-            target_action=CP_action,
+            target_action=draw_polygon,
             on_start=[
-                LogInfo(msg='Starting CP action server.'),
-                LogInfo(msg='Setting speed and acceleration values.')
-            ]
-        )
-    )
-
-    draw_circle_event = RegisterEventHandler(
-        OnProcessStart(
-            target_action=draw_circle,
-            on_start=[
-                LogInfo(msg='Starting draw_circle action server.'),
+                LogInfo(msg='Starting draw_polygon action server.'),
             ]
         )
     )
@@ -342,14 +323,9 @@ def generate_launch_description():
         actions=[Arc_action]
         )
     
-    CP_action_sched = TimerAction(
-        period=7.0,
-        actions=[CP_action]
-        )
-    
-    draw_circle_sched = TimerAction(
+    draw_polygon_sched = TimerAction(
         period=15.0,
-        actions=[draw_circle]
+        actions=[draw_polygon]
         )
 
     robot_state_sched = TimerAction(
@@ -375,8 +351,7 @@ def generate_launch_description():
         trajectory_validator_event,
         PTP_action_event,
         Arc_action_event,
-        CP_action_event,
-        draw_circle_event,
+        draw_polygon_event,
         robot_state_event,
         dobot_menu_event,
         tool_null_sched,
@@ -388,8 +363,7 @@ def generate_launch_description():
         trajectory_validator_sched,
         PTP_action_sched,
         Arc_action_sched,
-        CP_action_sched,
-        draw_circle_sched,
+        draw_polygon_sched,
         robot_state_sched,
         dobot_menu_sched,
         on_shutdown

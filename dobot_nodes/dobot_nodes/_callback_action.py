@@ -26,6 +26,7 @@ def goal_callback_action(self, goal_request):
         self.get_logger().info("Acc ratio: {0}".format(acc_ratio))
         bot.set_point_to_point_common_params(vel_ratio, acc_ratio)
         bot.set_arc_params(vel_ratio, vel_ratio, acc_ratio, acc_ratio)
+        bot.set_continous_trajectory_real_time_params(acc_ratio, vel_ratio, 10)
     else:
         self.get_logger().info('Wrong ratio in action goal field')
         return GoalResponse.REJECT

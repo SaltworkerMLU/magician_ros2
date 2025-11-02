@@ -1,6 +1,6 @@
 import time
 import math
-from dobot_msgs.action import DrawCircle
+from dobot_msgs.action import DrawPolygon
 import rclpy
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -18,7 +18,7 @@ from dobot_msgs.msg import DobotAlarmCodes
 from std_msgs.msg import Float64MultiArray
 from dobot_nodes._callback_action import goal_callback_action, cancel_callback_action, execute_callback_action
 
-class DobotCPServer(Node):
+class DobotPolygonServer(Node):
 
     # Make functions into class methods
     execute_callback_action = execute_callback_action
@@ -26,12 +26,12 @@ class DobotCPServer(Node):
     cancel_callback = cancel_callback_action
 
     def __init__(self):
-        super().__init__('dobot_draw_circle_server')  # Call any existing __init__ methods using super() as 'dobot_Arc_server'
+        super().__init__('dobot_draw_polygon_server')  # Call any existing __init__ methods using super() as 'dobot_Arc_server'
 
         self._action_server = ActionServer(             # The Action Server node (this class is the Action)
             self,                                       # The name of the Action connecting the two nodes
-            DrawCircle,                                  # Result Service
-            'draw_circle',                               # Allows external Feedback topics such as the ones below
+            DrawPolygon,                                  # Result Service
+            'draw_polygon',                               # Allows external Feedback topics such as the ones below
             execute_callback=self.execute_callback,     # Goal service
             callback_group=ReentrantCallbackGroup(),    # A Feedback topic which can invoke Result Service to end with a response
             goal_callback=self.goal_callback,
@@ -115,17 +115,14 @@ class DobotCPServer(Node):
 
         return SetParametersResult(successful=True)
     
-    def that_function(self, scale):
-        bot.set_continous_trajectory_real_time_params(20, 100, 10)
-
+    def that_function(self):
         # Draw about half an arch as a single path
         bot.stop_queue()
         #bot.clear_queue()
         #bot.set_continous_trajectory_command(1, start_x + 25, start_y + 25, start_z, 0.5) # start_r
-        steps = 24
-        for i in range(steps + 2):
-            x = math.cos((2*math.pi / steps) * i)
-            y = math.sin((2*math.pi / steps) * i)
+        for i in range(self.sides + 1):
+            x = math.cos((2*math.pi / self.sides) * i + math.radians(self.theta))
+            y = math.sin((2*math.pi / self.sides) * i + math.radians(self.theta))
 
             if i == 0:
                 bot.set_point_to_point_command(self.motion_type, 
@@ -142,8 +139,6 @@ class DobotCPServer(Node):
                                                  self.z_level, 0.5, 
                                                  queue=True)
         
-        #bot.set_continous_trajectory_command(1, start_x, start_y, start_z, 0.5, queue=True)
-
         bot.set_point_to_point_command(self.motion_type, 
                                        self.target_pose[0], 
                                        self.target_pose[1], 
@@ -157,13 +152,13 @@ class DobotCPServer(Node):
         #Execute a goal.
         self.get_logger().info('Executing goal...')
 
-        self.that_function(scale=25, )
+        self.that_function()
         
-        feedback_msg = DrawCircle.Feedback()
+        feedback_msg = DrawPolygon.Feedback()
         feedback_msg.current_pose = [0.0, 0.0, 0.0, 0.0]
         self.pose_arr = []
 
-        result = DrawCircle.Result()
+        result = DrawPolygon.Result()
 
         #result.achieved_pose = self.target
 
@@ -185,6 +180,8 @@ class DobotCPServer(Node):
         self.radius = goal_request.radius
         self.target_pose = goal_request.target_pose
         self.z_level = goal_request.z_level
+        self.sides = goal_request.sides
+        self.theta = goal_request.theta
 
         self.target = self.target_pose
 
@@ -210,7 +207,7 @@ class DobotCPServer(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_action_server = DobotCPServer()
+    minimal_action_server = DobotPolygonServer()
 
     # Use a MultiThreadedExecutor to enable processing goals concurrently
     executor = MultiThreadedExecutor()

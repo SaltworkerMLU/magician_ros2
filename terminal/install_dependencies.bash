@@ -26,6 +26,5 @@ rosdep install -i --from-path src --rosdistro humble -y;
 pip install -r ~/ws_magician/src/requirements.txt
 
 echo "" >> ~/.bashrc; # Creates empty line
-echo "cd ~" >> ~/.bashrc;
 echo "export MAGICIAN_TOOL=none" >> ~/.bashrc;
 echo "source ~/ws_magician/install/setup.bash" >> ~/.bashrc;
