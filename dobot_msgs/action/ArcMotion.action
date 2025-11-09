@@ -1,6 +1,6 @@
 #goal definition
-float64[4] circumference_point
-float64[4] ending_point
+float64[4] pc
+float64[4] pf
 float64 velocity_ratio 1.0
 float64 acceleration_ratio 1.0
 ---

@@ -1,0 +1,8 @@
+#request fields
+float64[4]  p0
+float64[4]  pc
+float64[4]  pf
+---
+#response fields
+bool is_valid   
+string message #if it is not feasible then why

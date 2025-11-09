@@ -98,6 +98,15 @@ def generate_launch_description():
         condition = IfCondition(PythonExpression(valid_tool))
     )
 
+    trajectory_validator_arc =ExecuteProcess(
+        cmd=[[
+            'ros2 ', 'launch ', 'dobot_nodes ', 'dobot_validate_trajectory_arc.launch.py'
+        ]],
+        shell=True,
+        output='screen',
+        condition = IfCondition(PythonExpression(valid_tool))
+    )
+
     PTP_action =ExecuteProcess(
         cmd=[[
             'ros2 ', 'launch ', 'dobot_nodes ', 'dobot_PTP.launch.py'
@@ -211,6 +220,16 @@ def generate_launch_description():
         )
     )
 
+    trajectory_validator_arc_event = RegisterEventHandler(
+        OnProcessStart(
+            target_action=trajectory_validator_arc,
+            on_start=[
+                LogInfo(msg='Strating arc trajectory validator service.'),
+                LogInfo(msg='Loading kinematics parameters.')
+            ]
+        )
+    )
+
     PTP_action_event = RegisterEventHandler(
         OnProcessStart(
             target_action=PTP_action,
@@ -312,6 +331,11 @@ def generate_launch_description():
         period=5.0,
         actions=[trajectory_validator]
         )
+    
+    trajectory_validator_arc_sched = TimerAction(
+        period=5.0,
+        actions=[trajectory_validator_arc]
+        )
 
     PTP_action_sched = TimerAction(
         period=7.0,
@@ -349,6 +373,7 @@ def generate_launch_description():
         homing_event,
         #auto_leveling_event,
         trajectory_validator_event,
+        trajectory_validator_arc_event,
         PTP_action_event,
         Arc_action_event,
         draw_polygon_event,
@@ -361,6 +386,7 @@ def generate_launch_description():
         homing_sched,
         #auto_leveling_sched,
         trajectory_validator_sched,
+        trajectory_validator_arc_sched,
         PTP_action_sched,
         Arc_action_sched,
         draw_polygon_sched,

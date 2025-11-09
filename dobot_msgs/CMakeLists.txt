@@ -23,7 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/SlidingRail.action"
   "msg/DobotAlarmCodes.msg"
   "msg/GripperStatus.msg"
-  "srv/EvaluateArcTrajectory.srv"
+  "srv/EvaluateARCTrajectory.srv"
   "srv/EvaluatePTPTrajectory.srv"
   "srv/ExecuteAutoLevelingProcedure.srv"
   "srv/ExecuteHomingProcedure.srv"

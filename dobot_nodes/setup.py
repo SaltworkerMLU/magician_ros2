@@ -33,6 +33,7 @@ setup(
             'homing_server = dobot_nodes.homing_server:main',
             'auto_leveling_server = dobot_nodes.auto_leveling:main',
             'trajectory_validator_server = dobot_nodes.trajectory_validator_server:main',
+            'trajectory_validator_server_arc = dobot_nodes.trajectory_validator_server_arc:main',
             'PTP_server = dobot_nodes.PTP_server:main',
             'sliding_rail_server = dobot_nodes.sliding_rail_server:main',
         ],

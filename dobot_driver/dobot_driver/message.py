@@ -1,4 +1,3 @@
-import sys
 from dobot_driver.parsers import parsers
 
 class Message:

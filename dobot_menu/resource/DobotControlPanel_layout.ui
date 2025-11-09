@@ -2754,11 +2754,11 @@
 
 
       <!--
-      ========================= Programming Tab =========================
+      ========================= Scripting Tab =========================
       -->
-      <widget class="QWidget" name="ProgrammingTab">
+      <widget class="QWidget" name="ScriptingTab">
         <attribute name="title">
-          <string>Programming</string>
+          <string>Scripting</string>
         </attribute>
 
         <!-- Add Bash Logo -->
@@ -2782,8 +2782,8 @@
           </property>
         </widget>
 
-        <!-- Add Programming title label -->
-        <widget class="QLabel" name="ProgrammingPanelTitle">
+        <!-- Add Scripting title label -->
+        <widget class="QLabel" name="ScriptingPanelTitle">
           <property name="geometry">
             <rect>
               <x>70</x>
@@ -2800,12 +2800,12 @@
             </font>
           </property>
           <property name="text">
-            <string>Programming Panel</string>
+            <string>Scripting Panel</string>
           </property>
         </widget>
 
-        <!-- Programming BUTTON execute -->
-        <widget class="QPushButton" name="programmingButtonExecute">
+        <!-- Scripting BUTTON execute -->
+        <widget class="QPushButton" name="scriptingButtonExecute">
           <property name="geometry">
             <rect>
               <x>160</x>
@@ -2819,8 +2819,8 @@
           </property>
         </widget>
 
-        <!-- Programming BUTTON EXPORT -->
-        <widget class="QPushButton" name="programmingButtonExport">
+        <!-- Scripting BUTTON EXPORT -->
+        <widget class="QPushButton" name="scriptingButtonExport">
           <property name="geometry">
             <rect>
               <x>230</x>
@@ -2834,8 +2834,8 @@
           </property>
         </widget>
 
-        <!-- Programming BUTTON IMPORT -->
-        <widget class="QPushButton" name="programmingButtonImport">
+        <!-- Scripting BUTTON IMPORT -->
+        <widget class="QPushButton" name="scriptingButtonImport">
           <property name="geometry">
             <rect>
               <x>230</x>
@@ -2849,8 +2849,8 @@
           </property>
         </widget>
 
-        <!-- Programming TEXT command path -->
-        <widget class="QLabel" name="programmingLabelCommandPath">
+        <!-- Scripting TEXT command path -->
+        <widget class="QLabel" name="scriptingLabelCommandPath">
           <property name="geometry">
             <rect>
               <x>10</x>
@@ -2871,8 +2871,8 @@
           </property>
         </widget>
 
-        <!-- Programming LINE EDIT command path -->
-        <widget class="QLineEdit" name="programmingLineEditCommandPath">
+        <!-- Scripting LINE EDIT command path -->
+        <widget class="QLineEdit" name="scriptingLineEditCommandPath">
           <property name="geometry">
             <rect>
               <x>10</x>
@@ -2897,8 +2897,8 @@
           </property>
         </widget>
 
-        <!-- Programming TEXT export path -->
-        <widget class="QLabel" name="programmingLabelExportPath">
+        <!-- Scripting TEXT export path -->
+        <widget class="QLabel" name="scriptingLabelExportPath">
           <property name="geometry">
             <rect>
               <x>10</x>
@@ -2919,8 +2919,8 @@
           </property>
         </widget>
 
-        <!-- Programming LINE EDIT export path -->
-        <widget class="QLineEdit" name="programmingLineEditExportPath">
+        <!-- Scripting LINE EDIT export path -->
+        <widget class="QLineEdit" name="scriptingLineEditExportPath">
           <property name="geometry">
             <rect>
               <x>10</x>
@@ -2942,8 +2942,8 @@
           </property>
         </widget>
       
-        <!-- Programming TEXT code display -->
-        <widget class="QLabel" name="programmingLabelCode">
+        <!-- Scripting TEXT code display -->
+        <widget class="QLabel" name="scriptingLabelCode">
           <property name="geometry">
             <rect>
               <x>20</x>
@@ -2961,8 +2961,8 @@
           </property>
         </widget>
 
-        <!-- Programming LINE EDIT code display -->
-        <widget class="QTextEdit" name="programmingLineEditCode">
+        <!-- Scripting LINE EDIT code display -->
+        <widget class="QTextEdit" name="scriptingLineEditCode">
           <property name="geometry">
             <rect>
               <x>20</x>
@@ -2989,7 +2989,7 @@
         -->
 
         <!-- The widget tab -->
-        <widget class="QTabWidget" name="ProgrammingRoot">
+        <widget class="QTabWidget" name="ScriptingRoot">
           <property name="geometry">
             <rect>
               <x>350</x>
@@ -3049,7 +3049,7 @@
             </widget>
 
             <!--  -->
-            <widget class="QWidget" name="horizontalLayoutWidget_programming1">
+            <widget class="QWidget" name="horizontalLayoutWidget_scripting1">
               <property name="geometry">
                 <rect>
                   <x>200</x>
@@ -3114,7 +3114,7 @@
             </widget>
 
             <!--  -->
-            <widget class="QWidget" name="horizontalLayoutWidget_programming2">
+            <widget class="QWidget" name="horizontalLayoutWidget_scripting2">
               <property name="geometry">
                 <rect>
                   <x>200</x>
@@ -3157,8 +3157,8 @@
 
             </widget>
 
-            <!-- Programming BUTTON teach (PTP) -->
-            <widget class="QPushButton" name="programmingButtonTeachEE">
+            <!-- Scripting BUTTON teach (PTP) -->
+            <widget class="QPushButton" name="scriptingButtonTeachEE">
               <property name="geometry">
                 <rect>
                 <x>95</x>
@@ -3201,7 +3201,7 @@
             </widget>
 
             <!--  -->
-            <widget class="QWidget" name="horizontalLayoutWidget_programming1">
+            <widget class="QWidget" name="horizontalLayoutWidget_scripting1">
               <property name="geometry">
                 <rect>
                   <x>200</x>
@@ -3266,7 +3266,7 @@
             </widget>
 
             <!--  -->
-            <widget class="QWidget" name="horizontalLayoutWidget_programming2">
+            <widget class="QWidget" name="horizontalLayoutWidget_scripting2">
               <property name="geometry">
                 <rect>
                   <x>200</x>
@@ -3309,8 +3309,8 @@
 
             </widget>
 
-            <!-- Programming BUTTON teach (PTP) -->
-            <widget class="QPushButton" name="programmingButtonTeachPTP">
+            <!-- Scripting BUTTON teach (PTP) -->
+            <widget class="QPushButton" name="scriptingButtonTeachPTP">
               <property name="geometry">
                 <rect>
                 <x>95</x>
@@ -4081,122 +4081,6 @@
 
           </widget>
 
-        </widget>
-
-      </widget>
-
-      <!--
-      ========================= Info Tab =========================
-      -->
-      <widget class="QWidget" name="InfoTab">
-        <attribute name="title">
-          <string>Info</string>
-        </attribute>
-
-        <!-- Add question mark logo at top left corner -->
-        <widget class="QLabel" name="InfoIcon">
-          <property name="geometry">
-            <rect>
-              <x>10</x>
-              <y>10</y>
-              <width>51</width>
-              <height>51</height>
-            </rect>
-          </property>
-          <property name="text">
-            <string/>
-          </property>
-          <property name="pixmap">
-            <pixmap>images/info.png</pixmap>
-          </property>
-          <property name="scaledContents">
-            <bool>true</bool>
-          </property>
-        </widget>
-
-        <!-- 
-        Add Text next to question mark logo saying:
-        "cartesian and joint coordinate system"
-        -->
-        <widget class="QLabel" name="InfoText">
-          <property name="geometry">
-            <rect>
-              <x>70</x>
-              <y>10</y>
-              <width>750</width>
-              <height>51</height>
-            </rect>
-          </property>
-          <property name="font">
-            <font>
-              <pointsize>18</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-            </font>
-          </property>
-          <property name="text">
-            <string>Cartesian and Joint Coordinate System</string>
-          </property>
-        </widget>
-
-        <!-- Add vertical line to separate text and images -->
-        <widget class="Line" name="InfoHLine">
-          <property name="geometry">
-            <rect>
-              <x>353</x>
-              <y>70</y>
-              <width>20</width>
-              <height>391</height>
-            </rect>
-          </property>
-          <property name="orientation">
-            <enum>Qt::Vertical</enum>
-          </property>
-        </widget>
-
-        <!-- Cartesian coordinate system image -->
-        <widget class="QLabel" name="CartesianSystemImage">
-          <property name="geometry">
-            <rect>
-              <x>10</x>
-              <y>110</y>
-              <width>341</width>
-              <height>291</height>
-            </rect>
-          </property>
-          <property name="styleSheet">
-            <string notr="true"/>
-          </property>
-          <property name="text">
-            <string/>
-          </property>
-          <property name="pixmap">
-            <pixmap>images/cartesian_system.png</pixmap>
-          </property>
-          <property name="scaledContents">
-            <bool>true</bool>
-          </property>
-        </widget>
-
-        <!-- Joint coordinate system image -->
-        <widget class="QLabel" name="JointSystemImage">
-          <property name="geometry">
-            <rect>
-              <x>380</x>
-              <y>110</y>
-              <width>341</width>
-              <height>291</height>
-            </rect>
-          </property>
-          <property name="text">
-            <string/>
-          </property>
-          <property name="pixmap">
-            <pixmap>images/dobot_joints_system.png</pixmap>
-          </property>
-          <property name="scaledContents">
-            <bool>true</bool>
-          </property>
         </widget>
 
       </widget>

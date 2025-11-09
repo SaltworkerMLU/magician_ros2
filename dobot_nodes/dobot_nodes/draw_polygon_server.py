@@ -13,7 +13,7 @@ from dobot_driver.dobot_handle import bot
 from ._PTP_params_class import declare_PTP_params
 from rcl_interfaces.msg import SetParametersResult
 from threading import Thread
-from dobot_msgs.srv import EvaluateArcTrajectory, EvaluatePTPTrajectory
+from dobot_msgs.srv import EvaluatePTPTrajectory
 from dobot_msgs.msg import DobotAlarmCodes
 from std_msgs.msg import Float64MultiArray
 from dobot_nodes._callback_action import goal_callback_action, cancel_callback_action, execute_callback_action

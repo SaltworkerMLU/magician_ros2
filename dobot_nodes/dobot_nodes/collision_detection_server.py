@@ -108,6 +108,98 @@ class PyBulletCollisionServer():
             waypoints.append([x[0] + (x[1]-x[0])*t, y[0] + (y[1]-y[0])*t, z[0] + (z[1]-z[0])*t])
 
         return waypoints
+    
+    @staticmethod
+    def P_t(t, P_center, r, u, w):
+        return P_center + r * (u * math.cos(t) + w * math.sin(t))
+
+    @staticmethod
+    def arc_trajectory_to_discrete_waypoints(P0, Pc, Pf, step_len = 1):
+        P0 = np.array(P0[0:3])
+        Pc = np.array(Pc[0:3])
+        Pf = np.array(Pf[0:3])
+
+        # Calculate the circle of the 3 points
+        vc = Pc - P0
+        vf = Pf - P0
+
+        N = np.cross(vc,vf)
+
+        if np.linalg.norm(N) == 0:
+            return False
+
+        P_center = P0 + ( ( pow(np.linalg.norm(vf),2) * np.cross(N,vc) + 
+                            pow(np.linalg.norm(vc),2) * np.cross(vf,N)) / 
+                            (2 * pow(np.linalg.norm(N), 2)) ) 
+
+        r = np.linalg.norm(P_center - P0)
+
+        # If the radius of the produced circle is too small, the Dobot Crashes
+        if r < 0.2:
+            return False
+
+        u = (P0 - P_center) / r
+        w = np.cross(N / np.linalg.norm(N), u)
+        
+        # Calculate span of circle where the trajectory will be done
+        angle = math.acos(np.dot(u, (Pf-P_center)) / 
+                          (np.linalg.norm(u) * np.linalg.norm(Pf-P_center)))
+
+        # Check if any vector element of P(t) and Pf do not match
+        if ( np.round( PyBulletCollisionServer.P_t(angle, P_center, r, u, w),2 ) != np.round(Pf,2) ).any():
+            angle = 2 * math.pi - angle
+
+        waypoints = []
+        for t in range(0,int(math.degrees(angle)), step_len):
+            next_point = PyBulletCollisionServer.P_t(math.radians(t), P_center, r, u, w)
+            waypoints.append(next_point)
+
+        # Add Pf to waypoints
+        waypoints.append(PyBulletCollisionServer.P_t(angle, P_center, r, u, w))
+
+        # Add maximum points to waypoint
+        
+        return waypoints
+
+        """waypoints = []
+
+        x = [P0[0], Pc[0], Pf[0]]
+        y = [P0[1], Pc[1], Pf[1]]
+        z = [P0[2], Pc[2], Pf[2]]
+
+        # Form vectors between the points
+        v1 = Pc - P0
+        v2 = Pf - P0
+
+        # Calculate the normal vector
+        n = np.cross(v1, v2)
+
+        # This only happens if the 3 dots are collinear (lying in the same straight line)
+        # In this case, no circle can be formed
+        if np.linalg.norm(n) == 0:
+            return False
+
+        # Normalize the normal vector (make its length equal 1)
+        n_norm = n / np.linalg.norm(n)
+        
+        # Some expressions
+        v11 = np.dot(v1, v1)
+        v22 = np.dot(v2, v2)
+        v12 = np.dot(v1, v2)
+        b = (v11 * v22 - pow(v12, 2))
+        k1 = 0.5 * (np.dot(v11, v22) - np.dot(v22, v12)) / b
+        k2 = 0.5 * (np.dot(v11, v22) - np.dot(v11, v12)) / b
+
+        # Find the 3D circle center
+        P_center = P0 + k1 * v1 + k2 * v2
+
+        # Find the 3D circle radius
+        radius = np.linalg.norm(P0 - P_center)
+
+        # Define two othogonal unit vectors
+        u = (P0 - P_center) / radius
+        w = np.cross(n_norm, u)"""
+
 
     
     def validate_trajectory(self, motion_type, current_pose, target_point, detect_ground):

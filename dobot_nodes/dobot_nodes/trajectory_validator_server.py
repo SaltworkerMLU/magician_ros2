@@ -1,8 +1,7 @@
 from dobot_msgs.srv import EvaluatePTPTrajectory
 import rclpy
 from rclpy.node import Node
-from dobot_nodes._dobot_inv_kin import calc_inv_kin
-from dobot_nodes._dobot_forward_kin import calc_FwdKin
+from dobot_nodes._dobot_kinematics import dobot_FK, dobot_IK
 import math
 from rcl_interfaces.msg import SetParametersResult, ParameterDescriptor
 import os.path as path
@@ -20,7 +19,7 @@ class PoseValidatorService(Node):
 
     def __init__(self):
         super().__init__('dobot_trajectory_validation_server')
-        self.srv_PTP = self.create_service(EvaluatePTPTrajectory, 'dobot_PTP_validation_service', self.PTP_trajectory_callback)
+        self.srv = self.create_service(EvaluatePTPTrajectory, 'dobot_PTP_validation_service', self.PTP_trajectory_callback)
         self.subscription_TCP = self.create_subscription(Float64MultiArray, 'dobot_pose_raw', self.tcp_position_callback, 10)
         self.collision_server = PyBulletCollisionServer()
 
@@ -32,7 +31,7 @@ class PoseValidatorService(Node):
         self.max_velocity = 115 #TODO [mm/s]
         self.axis_1_range = {"min": -125, "max": 125}
         self.axis_2_range = {"min": -5, "max": 90}
-        self.axis_3_range = {"min": -15, "max": 80} #"max": 60
+        self.axis_3_range = {"min": -15, "max": 90} #"max": 60
         self.axis_4_range = {"min": -150, "max": 150}
 
         self.path_to_collision_model = None
@@ -107,10 +106,15 @@ class PoseValidatorService(Node):
 
 
     def are_angles_in_range_joint(self, angles):
+        # Check DOCUMENTATION.md section "Dobot Magician Workspace" for details
         if (self.axis_1_range["min"] < angles[0] < self.axis_1_range["max"]) and \
            (self.axis_2_range["min"] < angles[1] < self.axis_2_range["max"]) and \
            (self.axis_3_range["min"] < angles[2] < self.axis_3_range["max"]) and \
-           (self.axis_4_range["min"] < angles[3] < self.axis_4_range["max"]):
+           (self.axis_4_range["min"] < angles[3] < self.axis_4_range["max"]) and \
+            not (90 > angles[2] > 65 and angles[1] < angles[2] - 70) and \
+            not (35 > angles[2] > -5 and angles[1] > angles[2] + 55) and \
+            not (90 > angles[1] > 40 and angles[2] < angles[1] - 55) and \
+            not (20 > angles[1] > -15 and angles[2] > angles[1] + 70):
            return True
         return False
     
@@ -130,8 +134,7 @@ class PoseValidatorService(Node):
 
 
     def is_target_valid(self, target, target_type):
-
-        # Target expressed in joint coordinates
+        # Joint values moving using MoveJ
         if target_type == 4:
             in_limit = self.are_angles_in_range_joint(target)
             if in_limit == False:
@@ -141,17 +144,23 @@ class PoseValidatorService(Node):
             #     return (False, 'A collision was detected during trajectory validation. The movement cannot be executed.')
             else:
                 return (True, 'Trajectory is safe and feasible.')
-            
+        
+        # Joint values moving using MoveL
         elif target_type == 5:
             xyz = target.tolist()
-            cartesian_target = calc_FwdKin(xyz[0], xyz[1], xyz[2])
+            cartesian_target = dobot_FK(xyz[0], xyz[1], xyz[2])
+
+            # Using MoveL, if the positions are too close, the Dobot crashes
+            if np.linalg.norm(np.array(cartesian_target) - np.array(self.dobot_pose)) <= 0.51:
+                return (False, 'Positions are too close to each other.')
+
             cartesian_target_point = [float(cartesian_target[0]), float(cartesian_target[1]), float(cartesian_target[2])]
             waypoints = self.collision_server.linear_trajecory_to_discrete_waypoints(self.dobot_pose, cartesian_target_point)
             cartesian_target_list = [float(cartesian_target[0]), float(cartesian_target[1]), float(cartesian_target[2]), xyz[3]]
             for point in waypoints:
                 end_tool_rotation = target.tolist()[3]
                 point.append(end_tool_rotation)
-                angles = calc_inv_kin(*point)
+                angles = dobot_IK(*point)
                 if angles == False:
                     return (False, 'Inv Kin solving error!')
                 in_limit = self.are_angles_in_range_joint(angles)
@@ -164,9 +173,9 @@ class PoseValidatorService(Node):
                 return (True, 'Trajectory is safe and feasible.')
 
 
-        # Target expressed in cartesian coordinates
+        # Cartesian values moving using MoveJ
         elif target_type == 1:
-            angles = calc_inv_kin(*target)
+            angles = dobot_IK(*target)
             if angles == False:
                 return (False, 'Inv Kin solving error!')
             in_limit = self.are_angles_in_range_cartesian(angles, target)
@@ -178,13 +187,16 @@ class PoseValidatorService(Node):
             else:
                 return (True, 'Trajectory is safe and feasible.')
 
-
-        elif target_type == 2:
+        # Cartesian values moving using MoveL
+        elif target_type == 2: 
+            # Using MoveL, if the positions are too close, the Dobot crashes
+            if np.linalg.norm(np.array(target) - np.array(self.dobot_pose)) <= 0.51:
+                return (False, 'Positions are too close to each other.')
             waypoints = self.collision_server.linear_trajecory_to_discrete_waypoints(self.dobot_pose, target)
             for point in waypoints:
                 end_tool_rotation = target.tolist()[3]
                 point.append(end_tool_rotation)
-                angles = calc_inv_kin(*point)
+                angles = dobot_IK(*point)
                 if angles == False:
                     return (False, 'Inv Kin solving error!')
                 in_limit = self.are_angles_in_range_cartesian(angles, target)

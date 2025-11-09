@@ -2,5 +2,5 @@
   ros__parameters:
     axis_1_range: [-125, 125]
     axis_2_range: [-5, 90]
-    axis_3_range: [-15, 80]
+    axis_3_range: [-15, 90]
     axis_4_range: [-150, 150]

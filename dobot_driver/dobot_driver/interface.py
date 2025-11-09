@@ -1,6 +1,5 @@
-import serial
-import threading
-import sys
+import serial       # Allows USB to serial port communication
+import threading    # Use multithreading 
 
 from dobot_driver.message import Message
 

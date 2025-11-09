@@ -13,7 +13,7 @@ from dobot_driver.dobot_handle import bot
 from ._PTP_params_class import declare_PTP_params
 from rcl_interfaces.msg import SetParametersResult
 from threading import Thread
-from dobot_msgs.srv import EvaluateArcTrajectory, EvaluatePTPTrajectory
+from dobot_msgs.srv import EvaluateARCTrajectory
 from dobot_msgs.msg import DobotAlarmCodes
 from std_msgs.msg import Float64MultiArray
 from dobot_nodes._callback_action import goal_callback_action, cancel_callback_action, execute_callback_action
@@ -26,7 +26,7 @@ class DobotArcServer(Node):
     cancel_callback = cancel_callback_action
 
     def __init__(self):
-        super().__init__('dobot_Arc_server')  # Call any existing __init__ methods using super() as 'dobot_Arc_server'
+        super().__init__('dobot_ARC_server')  # Call any existing __init__ methods using super() as 'dobot_Arc_server'
 
         self._action_server = ActionServer(             # The Action Server node (this class is the Action)
             self,                                       # The name of the Action connecting the two nodes
@@ -49,15 +49,15 @@ class DobotArcServer(Node):
             self.active_alarms_callback,
             10)
         
-        self.client_validate_goal = self.create_client(srv_type = EvaluatePTPTrajectory, 
-                                                        srv_name = 'dobot_PTP_validation_service', 
+        self.client_validate_goal = self.create_client(srv_type = EvaluateARCTrajectory, 
+                                                        srv_name = 'dobot_ARC_validation_service', 
                                                         callback_group=ReentrantCallbackGroup())
         while not self.client_validate_goal.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Trajectory validation service not available, waiting again...')
 
         self.motion_type = None 
-        self.circumference_point = []
-        self.ending_point = [] 
+        self.pc = []
+        self.pf = [] 
         self.pose_arr = []
         self.dobot_pose = [] 
         self.mode_ACK = False
@@ -101,10 +101,11 @@ class DobotArcServer(Node):
 
         return SetParametersResult(successful=True)
   
-    def send_request_check_trajectory(self, target):
-        self.req_validate = EvaluatePTPTrajectory.Request()
-        self.req_validate.target = target
-        self.req_validate.motion_type = 1
+    def send_request_check_trajectory(self, p0, pc, pf):
+        self.req_validate = EvaluateARCTrajectory.Request()
+        self.req_validate.p0 = p0
+        self.req_validate.pc = pc
+        self.req_validate.pf = pf
         self.future = self.client_validate_goal.call_async(self.req_validate)
         while not self.future.done():
             pass
@@ -115,38 +116,36 @@ class DobotArcServer(Node):
         super().destroy_node()
 
     def goal_callback(self, goal_request):
-        self.circumference_point = goal_request.circumference_point
-        self.ending_point = goal_request.ending_point
+        self.p0 = self.dobot_pose
+        self.pc = goal_request.pc
+        self.pf = goal_request.pf
         
         # Check if trajectory is feasible within robot workspace
-        validation_response1 = self.send_request_check_trajectory(self.circumference_point)
-        if validation_response1.is_valid == False:
-            self.get_logger().warn("Circumference point rejected: {0}".format(validation_response1))
-            return GoalResponse.REJECT
-        
-        validation_response = self.send_request_check_trajectory(self.ending_point)
+        validation_response = self.send_request_check_trajectory(self.p0,
+                                                                 self.pc,
+                                                                 self.pf)
         if validation_response.is_valid == False:
-            self.get_logger().warn("Ending point rejected: {0}".format(validation_response))
+            self.get_logger().warn("Trajectory rejected: {0}".format(validation_response))
             return GoalResponse.REJECT
 
         self.get_logger().info("Result of calling validation service: is valid? {0}, description: {1}".format(validation_response.is_valid, validation_response.message))
 
-        self.get_logger().info('Checkpoint: {0}'.format(self.circumference_point))
-        self.get_logger().info('Goal: {0}'.format(self.ending_point))
+        self.get_logger().info('Checkpoint: {0}'.format(self.pc))
+        self.get_logger().info('Goal: {0}'.format(self.pf))
 
         _goalResponse = self.goal_callback_action(goal_request)
 
         return _goalResponse
     
     async def execute_callback(self, goal_handle):
-        bot.set_arc_command([self.circumference_point[0], 
-                             self.circumference_point[1],
-                             self.circumference_point[2],
-                             self.circumference_point[3]], 
-                            [self.ending_point[0], 
-                             self.ending_point[1], 
-                             self.ending_point[2], 
-                             self.ending_point[3]])
+        bot.set_arc_command([self.pc[0], 
+                             self.pc[1],
+                             self.pc[2],
+                             self.pc[3]], 
+                            [self.pf[0], 
+                             self.pf[1], 
+                             self.pf[2], 
+                             self.pf[3]])
         
         feedback_msg = ArcMotion.Feedback()
         feedback_msg.current_pose = [0.0, 0.0, 0.0, 0.0]
@@ -154,7 +153,7 @@ class DobotArcServer(Node):
 
         result = ArcMotion.Result()
 
-        self.target = self.ending_point
+        self.target = self.pf
 
         self.execute_callback_action(goal_handle, result, feedback_msg)
 

@@ -26,10 +26,12 @@ import sys
 from time import sleep
 from dobot_msgs.action import PointToPoint
 from dobot_msgs.action._point_to_point import PointToPoint_FeedbackMessage
+from dobot_msgs.action._arc_motion import ArcMotion_FeedbackMessage
 from action_msgs.msg._goal_status_array import GoalStatusArray
 from diagnostic_msgs.msg._diagnostic_array import DiagnosticArray
 #from dobot_msgs.msg._dobot_alarm_codes import DobotAlarmCodes
 from dobot_msgs.msg import DobotAlarmCodes
+from dobot_nodes._dobot_kinematics import dobot_FK, dobot_IK
 
 class DobotMenu(QWidget):
 
@@ -66,14 +68,16 @@ class DobotMenu(QWidget):
         self.dobotJoints = None                   # Store current joint states
         self.dobotPose = []                     # Store current TCP pose
         self.frame = "base"                     # Store current frame mode ("base" or "joint")
-        self.valueType = "base"                 # Store current programming value type
-        self.movementType = "movej"             # Store current programming movement type
+        self.valueType = "base"                 # Store current scripting value type
+        self.movementType = "movej"             # Store current scripting movement type
         self.gripperType = "gripper"            # Store grupper type (gripper, suction cup)
         self.gripperClose = False               # Store current gripper mode (on or off)
         self.suctionCupOn = False               # Store current suction cup mode (on or off)
         self.import_path = os.path.join(package_path, 'share', 'dobot_menu', 'resource', 'commands') # Default import path
         self.log_path = os.path.join(package_path, 'share', 'dobot_menu', 'resource', 'logs') # Default log path
         self.log_file = "logs.txt"
+        self.current_process = subprocess.Popen(":", shell=True)    # Store subprocess which does nothing
+        self.dobotJoint1Offset = -11.5 * math.pi / 180              # Store dobot joint offset on joint 1
 
         # ----------------------------------- #
         # Create subscriptions and publishers #
@@ -92,15 +96,21 @@ class DobotMenu(QWidget):
 
         self.gripper_state_publ = self._node.create_publisher(GripperStatus, 'gripper_status_rviz', 10)
 
-        """self._node.create_subscription(PointToPoint_FeedbackMessage,
+        self.lol = self._node.create_subscription(
+            PointToPoint_FeedbackMessage,
             "PTP_action/_action/feedback",
-            self.action_logs,
-            10)"""
+            self.move_logs,
+            10)
         
-        """self._node.create_subscription(GoalStatusArray,
-                                       "PTP_action/_action/status",
-                                       self.action_logs,
-                                       10)"""
+        self._node.create_subscription(ArcMotion_FeedbackMessage,
+            "Arc_action/_action/feedback",
+            self.move_logs,
+            10)
+        
+        #self._node.create_subscription(GoalStatusArray,
+        #                               "PTP_action/_action/status",
+        #                               self.move_logs,
+        #                               10)
         
         self.subscription_alarms = self._node.create_subscription(
             DobotAlarmCodes,
@@ -204,17 +214,11 @@ class DobotMenu(QWidget):
             bot.set_jog_common_params(100, 1) # (vel_ratio, acc_ratio)
             bot.set_jog_joint_params([100, 100, 100, 100], [100, 100, 100, 100])
             bot.set_jog_coordinate_params([100, 100, 100, 100], [100, 100, 100, 100])
-
-            # Start homing the robot
-            command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
-            subprocess.Popen(
-                        command, universal_newlines=True, shell=True,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         else:
             self.write_logs("Dobot Magician is not connected. Please restart this application after connecting the Dobot.")
 
-        # Programming Tab
-        self.programmingButtonTeachEE.clicked.connect(self.EE_teach_command)
+        # Scripting Tab
+        self.scriptingButtonTeachEE.clicked.connect(self.EE_teach_command)
 
         self.EEGripperClose.setChecked(True)
         self.EEGripperClose.setAutoExclusive(False)
@@ -227,29 +231,29 @@ class DobotMenu(QWidget):
         self.EEGripperClose.toggled.connect(lambda:self.gripper_control_tab(self.EEGripperClose))
         self.EEGripperOpen.toggled.connect(lambda:self.gripper_control_tab(self.EEGripperOpen))
 
-        self.programmingButtonTeachPTP.clicked.connect(self.PTP_teach_command)
+        self.scriptingButtonTeachPTP.clicked.connect(self.PTP_teach_command)
 
         if self.is_connected:
-            self.programmingButtonExecute.clicked.connect(self.execute_command)
+            self.scriptingButtonExecute.clicked.connect(self.execute_command)
 
-        self.programmingButtonExport.clicked.connect(self.export_command)
-        self.programmingButtonImport.clicked.connect(self.import_command)
+        self.scriptingButtonExport.clicked.connect(self.export_command)
+        self.scriptingButtonImport.clicked.connect(self.import_command)
 
-        self.programmingLineEditExportPath.setText("/mnt/c/users")
+        self.scriptingLineEditExportPath.setText("/mnt/c/users")
 
-        self.programmingLineEditCode.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.programmingLineEditCode.textChanged.connect(lambda:self.execute_save_command(self.programmingLineEditCode))         # Autosave the code when the text is changed
-        self.programmingLineEditCommandPath.textChanged.connect(lambda:self.execute_load_command(self.programmingLineEditCode))  # Load the code when the command file name is changed
+        self.scriptingLineEditCode.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.scriptingLineEditCode.textChanged.connect(lambda:self.execute_save_command(self.scriptingLineEditCode))         # Autosave the code when the text is changed
+        self.scriptingLineEditCommandPath.textChanged.connect(lambda:self.execute_load_command(self.scriptingLineEditCode))  # Load the code when the command file name is changed
         
-        self.execute_load_command(self.programmingLineEditCode) # Load the default code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the default code to file
 
         # Frame selection - defaults to MoveJ and Base Values
         self.MoveJCommand.setChecked(True)
         self.BaseValues.setChecked(True)
-        self.JointValues.toggled.connect(lambda:self.framestate_programming_tab_valueType(self.JointValues))
-        self.BaseValues.toggled.connect(lambda:self.framestate_programming_tab_valueType(self.BaseValues))
-        self.MoveJCommand.toggled.connect(lambda:self.framestate_programming_tab_movement(self.MoveJCommand))
-        self.MoveLCommand.toggled.connect(lambda:self.framestate_programming_tab_movement(self.MoveLCommand))
+        self.JointValues.toggled.connect(lambda:self.framestate_scripting_tab_valueType(self.JointValues))
+        self.BaseValues.toggled.connect(lambda:self.framestate_scripting_tab_valueType(self.BaseValues))
+        self.MoveJCommand.toggled.connect(lambda:self.framestate_scripting_tab_movement(self.MoveJCommand))
+        self.MoveLCommand.toggled.connect(lambda:self.framestate_scripting_tab_movement(self.MoveLCommand))
 
         # -----------------------------------------------------------------------------
         # Drawing tab
@@ -381,12 +385,15 @@ class DobotMenu(QWidget):
 
     def teachZCoordinateCircumference(self):
         self.DrawZCoordinateAxisCircumference.setText(str(round(self.dobotPose[2], 3)))
-        self._node.get_logger().info(f"Updating line position with joint states: {self.dobotJoints}")
+        self._node.get_logger().info(f"Updating circumference point position with joint states: {self.dobotJoints}")
     
     def teachZCoordinateEnd(self):
         self.DrawZCoordinateAxisEnd.setText(str(round(self.dobotPose[2], 3)))
+        self._node.get_logger().info(f"Updating ending point position with joint states: {self.dobotJoints}")
 
     def update_line_position(self):
+        joint1withOffset = self.dobotJoints[0] + self.dobotJoint1Offset
+
         #self._node.get_logger().info(f"Updating line position with joint states: {self.dobotJoints}")
         _link2_rotated_by_joint = [self.link_len[1] * math.sin(self.dobotJoints[1]), 
                                    self.link_len[1] * math.cos(self.dobotJoints[1])]
@@ -407,29 +414,35 @@ class DobotMenu(QWidget):
         
         self.link_2_top.setLine(self.link_2_start_top[0], 
                                 self.link_2_start_top[1], 
-                                self.link_2_start_top[0] + math.cos(self.dobotJoints[0]) * _link2_rotated_by_joint[0], 
-                                self.link_2_start_top[1] - math.sin(self.dobotJoints[0]) * _link2_rotated_by_joint[0],
+                                self.link_2_start_top[0] + math.cos(joint1withOffset) * _link2_rotated_by_joint[0], 
+                                self.link_2_start_top[1] - math.sin(joint1withOffset) * _link2_rotated_by_joint[0],
                                 )
-        self.link_3_top.setLine(self.link_2_start_top[0] + math.cos(self.dobotJoints[0]) * _link2_rotated_by_joint[0], 
-                                self.link_2_start_top[1] - math.sin(self.dobotJoints[0]) * _link2_rotated_by_joint[0],
-                                self.link_2_start_top[0] + math.cos(self.dobotJoints[0]) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] ), 
-                                self.link_2_start_top[1] - math.sin(self.dobotJoints[0]) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] )
+        self.link_3_top.setLine(self.link_2_start_top[0] + math.cos(joint1withOffset) * _link2_rotated_by_joint[0], 
+                                self.link_2_start_top[1] - math.sin(joint1withOffset) * _link2_rotated_by_joint[0],
+                                self.link_2_start_top[0] + math.cos(joint1withOffset) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] ), 
+                                self.link_2_start_top[1] - math.sin(joint1withOffset) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] )
                                 )
         
         # Draw The EE dot automatically
-        _EEDrawDot = [ math.cos(self.dobotJoints[0]) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] + self.EE_XY_len ), 
-                      -math.sin(self.dobotJoints[0]) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] + self.EE_XY_len )]
+        _EEDrawDot = [ math.cos(joint1withOffset) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] + self.EE_XY_len ), 
+                      -math.sin(joint1withOffset) * ( _link2_rotated_by_joint[0] + _link3_rotated_by_joint[0] + self.EE_XY_len )]
         self.EEDrawDot.setPos(_EEDrawDot[0], _EEDrawDot[1])
         
-        _CDot = [  self.DrawXCoordinateSliderCircumference.value() * self.sceneScaling + math.cos(self.dobotJoints[0])*self.EE_XY_len,
-                 -(self.DrawYCoordinateSliderCircumference.value() * self.sceneScaling + math.sin(self.dobotJoints[0])*self.EE_XY_len)]
+        R_1offsetend = [math.cos(self.dobotJoint1Offset) * self.DrawXCoordinateSliderEnd.value() - math.sin(self.dobotJoint1Offset) * self.DrawYCoordinateSliderEnd.value(),
+                        math.sin(self.dobotJoint1Offset) * self.DrawXCoordinateSliderEnd.value() + math.cos(self.dobotJoint1Offset) * self.DrawYCoordinateSliderEnd.value()]
+
+        R_1offsetc = [math.cos(self.dobotJoint1Offset) * self.DrawXCoordinateSliderCircumference.value() - math.sin(self.dobotJoint1Offset) * self.DrawYCoordinateSliderCircumference.value(),
+                        math.sin(self.dobotJoint1Offset) * self.DrawXCoordinateSliderCircumference.value() + math.cos(self.dobotJoint1Offset) * self.DrawYCoordinateSliderCircumference.value()]
+
+        _CDot = [  R_1offsetc[0] * self.sceneScaling + math.cos(joint1withOffset)*self.EE_XY_len,
+                 -(R_1offsetc[1] * self.sceneScaling + math.sin(joint1withOffset)*self.EE_XY_len)]
         self.CDot.setPos(_CDot[0], _CDot[1])
         
-        _EndDot = [  self.DrawXCoordinateSliderEnd.value() * self.sceneScaling + math.cos(self.dobotJoints[0]) * self.EE_XY_len,
-                   -(self.DrawYCoordinateSliderEnd.value() * self.sceneScaling + math.sin(self.dobotJoints[0]) * self.EE_XY_len)]
+        _EndDot = [  R_1offsetend[0] * self.sceneScaling + math.cos(joint1withOffset) * self.EE_XY_len,
+                   -(R_1offsetend[1] * self.sceneScaling + math.sin(joint1withOffset) * self.EE_XY_len)]
         self.EndDot.setPos(_EndDot[0], _EndDot[1])
 
-        if self.Root.currentIndex() != 3 or self.ProgrammingRoot.currentIndex() != 2: # This is the drawing tab
+        if self.Root.currentIndex() != 3 or self.ScriptingRoot.currentIndex() != 2: # This is the drawing tab
             self.CDot.hide()
             self.EndDot.hide()
         else:
@@ -443,6 +456,16 @@ class DobotMenu(QWidget):
         self.ZPoseLCD.setText(str(round(self.dobotPose[2], 3)))
         self.RPoseLCD.setText(str(round(self.dobotPose[3], 3)))
 
+        #theta = dobot_IK(self.dobotPose[0], 
+        #                 self.dobotPose[1], 
+        #                 self.dobotPose[2], 
+        #                 self.dobotPose[3])
+        
+        #self.JT1LCD.setText(str(round((theta[0]), 3)))
+        #self.JT2LCD.setText(str(round((theta[1]), 3)))
+        #self.JT3LCD.setText(str(round((theta[2]), 3)))
+        #self.JT4LCD.setText(str(round((theta[3]), 3)))
+
 
     def joints_positions_callback(self, msg):
         self.dobotJoints = msg.position # Stores joint position in radians
@@ -450,6 +473,18 @@ class DobotMenu(QWidget):
         self.JT2LCD.setText(str(round((math.degrees(self.dobotJoints[1])), 3)))
         self.JT3LCD.setText(str(round((math.degrees(self.dobotJoints[2])), 3)))
         self.JT4LCD.setText(str(round((math.degrees(self.dobotJoints[3])), 3)))
+        
+        # self.dobotJoints[0] -= math.radians(11.5)
+        #cartesian_target = dobot_FK(math.degrees(self.dobotJoints[0]), 
+        #                            math.degrees(self.dobotJoints[1]), 
+        #                            math.degrees(self.dobotJoints[2]), 
+        #                            math.degrees(self.dobotJoints[3]))
+
+        #self.XPoseLCD.setText(str(round(cartesian_target[0], 3)))
+        #self.YPoseLCD.setText(str(round(cartesian_target[1], 3)))
+        #self.ZPoseLCD.setText(str(round(cartesian_target[2], 3)))
+        #self.RPoseLCD.setText(str(round(cartesian_target[3], 3)))
+
 
     def rail_pose_callback(self, msg):
         self.rail_pose = msg.data
@@ -491,14 +526,14 @@ class DobotMenu(QWidget):
         if b.text() == "Joint" and b.isChecked() == True:
             self.frame = "joint"
 
-    def framestate_programming_tab_valueType(self, b):
+    def framestate_scripting_tab_valueType(self, b):
         if b.text() == "Base" and b.isChecked() == True:
             self.valueType = "base"
                     
         if b.text() == "Joint" and b.isChecked() == True:
             self.valueType = "joint"
 
-    def framestate_programming_tab_movement(self, b):
+    def framestate_scripting_tab_movement(self, b):
         if b.text() == "MoveL" and b.isChecked() == True:
             self.movementType = "movel"
                     
@@ -507,7 +542,7 @@ class DobotMenu(QWidget):
             
 
     def JT_IDLE(self):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             if self.frame == "base":
                 bot.set_jog_command(0, 0)
             elif self.frame == "joint":
@@ -515,7 +550,7 @@ class DobotMenu(QWidget):
 
         
     def JT1_move(self, sign):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             if sign.text() == "+":
                 if self.frame == "base":
                     bot.set_jog_command(0, 1)
@@ -528,7 +563,7 @@ class DobotMenu(QWidget):
                     bot.set_jog_command(1, 2)
 
     def JT2_move(self, sign):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             if sign.text() == "+":
                 if self.frame == "base":
                     bot.set_jog_command(0, 3)
@@ -541,7 +576,7 @@ class DobotMenu(QWidget):
                     bot.set_jog_command(1, 4)
 
     def JT3_move(self, sign):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             if sign.text() == "+":
                 if self.frame == "base":
                     bot.set_jog_command(0, 5)
@@ -554,7 +589,7 @@ class DobotMenu(QWidget):
                     bot.set_jog_command(1, 6)
 
     def JT4_move(self, sign):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             if sign.text() == "+":
                 if self.frame == "base":
                     bot.set_jog_command(0, 7)
@@ -573,10 +608,10 @@ class DobotMenu(QWidget):
         # msg.setText("Information")
         msg.setInformativeText("The homing procedure is about to start. Wait until the arm stops moving and the led stops flashing blue and turns green.")
         msg.setWindowTitle("Homing procedure")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        button_pressed = msg.exec_()
 
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None and button_pressed == QMessageBox.Ok:
             command = 'ros2 service call /dobot_homing_service dobot_msgs/srv/ExecuteHomingProcedure'
             subprocess.Popen(
                         command, universal_newlines=True, shell=True,
@@ -596,13 +631,13 @@ class DobotMenu(QWidget):
         elif self.gripperType == "suctionCup" and self.suctionCupOn == False:
             command_cmd = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
         
-        command_file = self.programmingLineEditCommandPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
         subprocess.Popen(
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the imported code to file
     
     def PTP_teach_command(self):
         # --------------------- #
@@ -615,7 +650,7 @@ class DobotMenu(QWidget):
         if self.valueType == "joint":
             motion_type = motion_type + 3
             dobotMotion = [math.degrees(self.dobotJoints[0]), math.degrees(self.dobotJoints[1]), math.degrees(self.dobotJoints[2]), math.degrees(self.dobotJoints[3])]
-        command_file = self.programmingLineEditCommandPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         #command_path = '/home/vboxuser/ws_magician/src/dobot_menu/resource/commands/commands.bash'
         command_motion = "{motion_type: " + str(motion_type) + ", target_pose: " + str(dobotMotion) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
         command_cmd = "ros2 action send_goal /PTP_action dobot_msgs/action/PointToPoint " + "\\\"" + command_motion +  "\\\"" + " --feedback"
@@ -624,30 +659,30 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the imported code to file
 
     def Arc_teach_command(self):
         # -------------------------- #
         # Teach the pose in Arc      #
         # -------------------------- #
-        circumference_point = [self.DrawXCoordinateAxisCircumference.text(), 
-                               self.DrawYCoordinateAxisCircumference.text(), 
-                               self.DrawZCoordinateAxisCircumference.text(), 
-                               0.0]
-        ending_point = [self.DrawXCoordinateAxisEnd.text(), 
-                               self.DrawYCoordinateAxisEnd.text(), 
-                               self.DrawZCoordinateAxisEnd.text(), 
-                               0.0]
-        command_file = self.programmingLineEditCommandPath.text()
+        pc = [self.DrawXCoordinateAxisCircumference.text(), 
+              self.DrawYCoordinateAxisCircumference.text(), 
+              self.DrawZCoordinateAxisCircumference.text(), 
+              0.0]
+        pf = [self.DrawXCoordinateAxisEnd.text(), 
+              self.DrawYCoordinateAxisEnd.text(), 
+              self.DrawZCoordinateAxisEnd.text(), 
+              0.0]
+        command_file = self.scriptingLineEditCommandPath.text()
         #command_path = '/home/vboxuser/ws_magician/src/dobot_menu/resource/commands/commands.bash'
-        command_motion = "{circumference_point: " + str(circumference_point) + ", ending_point: " + str(ending_point) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
+        command_motion = "{pc: " + str(pc) + ", pf: " + str(pf) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
         command_cmd = "ros2 action send_goal /Arc_action dobot_msgs/action/ArcMotion " + "\\\"" + command_motion +  "\\\"" + " --feedback"
         command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
         subprocess.Popen(
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
         
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the imported code to file
 
     def Polygon_teach_command(self):
         target_pose = self.dobotPose
@@ -656,7 +691,7 @@ class DobotMenu(QWidget):
         sides = self.PolygonSidesAxis.text()
         theta = self.PolygonThetaAxis.text()
 
-        command_file = self.programmingLineEditCommandPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         command_motion = "{target_pose: " + str(target_pose) + ", radius: " + str(radius) + ", z_level: " + str(z_level) + ", sides: " + str(sides) + ", theta: " + str(theta) + ", velocity_ratio: 0.5, acceleration_ratio: 0.3}"
         command_cmd = "ros2 action send_goal /draw_polygon dobot_msgs/action/DrawPolygon " + "\\\"" + command_motion +  "\\\"" + " --feedback"
         command = 'echo ' + command_cmd + ' >> ' + self.import_path + '/' + command_file
@@ -664,26 +699,24 @@ class DobotMenu(QWidget):
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,bufsize=1).communicate()
                 
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the imported code to file
     
     def execute_command(self):
         # ------------------- #
         # Execute the code    #
         # ------------------- #
-        self.write_logs("Pressing execute")
-        command_file = self.programmingLineEditCommandPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         #command = 'bash ~/ws_magician/src/dobot_menu/resource/commands/commands.bash'
         command = 'bash ' + self.import_path + '/' + command_file
-        subprocess.Popen(
-                    command, universal_newlines=True, shell=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-
+        self.current_process = subprocess.Popen(
+                                command, shell=True)
+        
     def export_command(self):
         # ------------------- #
         # Export code to PC   #
         # ------------------- #
-        export_path = self.programmingLineEditExportPath.text()
-        command_file = self.programmingLineEditCommandPath.text()
+        export_path = self.scriptingLineEditExportPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         command = 'cp ' + self.import_path + '/' + command_file + ' ' + export_path
         subprocess.Popen(
                     command, universal_newlines=True, shell=True,
@@ -693,41 +726,44 @@ class DobotMenu(QWidget):
         # ------------------- #
         # Import code from PC #
         # ------------------- #
-        export_path = self.programmingLineEditExportPath.text()
-        command_file = self.programmingLineEditCommandPath.text()
+        export_path = self.scriptingLineEditExportPath.text()
+        command_file = self.scriptingLineEditCommandPath.text()
         command = 'cp ' + export_path + '/' + command_file + ' -r ' + self.import_path
         #command = 'cp /mnt/c/users/mathias/WSL/commands.bash -r ~/ws_magician/src/dobot_menu/resource/commands'
         subprocess.Popen(
                     command, universal_newlines=True, shell=True,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         
-        self.execute_load_command(self.programmingLineEditCode) # Load the imported code to file
+        self.execute_load_command(self.scriptingLineEditCode) # Load the imported code to file
         
     def execute_load_command(self, widget):
         # ------------------- #
         # Load code from file #
         # ------------------- #
-        command_file = self.programmingLineEditCommandPath.text()
-        self.programmingLabelCode.setText(command_file)             # 
+        command_file = self.scriptingLineEditCommandPath.text()
+        self.scriptingLabelCode.setText(command_file)             # 
 
         try:
             with open(self.import_path + '/' + command_file, 'r') as file:
                 code = file.read()
-                widget.setText(code) # self.programmingLineEditCode
+                widget.setText(code) # self.scriptingLineEditCode
         except Exception as e:
-            widget.setText(f"Error saving file: {e}") # self.programmingLineEditCode
+            self.write_logs(f"Error loading file: {e}")
+            widget.setText("")
+
 
     def execute_save_command(self, widget):
         # ------------------- #
         # Save code to file   #
         # ------------------- #
-        self.log_file = self.programmingLineEditCommandPath.text()
+        self.log_file = self.scriptingLineEditCommandPath.text()
         code = widget.toPlainText()
         try:
             with open(self.import_path + '/' + self.log_file, 'w') as file:
                 file.write(code)
         except Exception as e:
-            self.programmingLineEditCode.setText(f"Error saving file: {e}")
+            self.write_logs(f"Error saving file: {e}")
+            widget.setText("")
 
     def write_logs(self, message):
         # -------------------------- #
@@ -739,7 +775,7 @@ class DobotMenu(QWidget):
         # ---------------------------- #
         # Clears text in to logs.txt   #
         # ---------------------------- #
-        self.loggercmd.setText(f"Logs of {self.log_file} have been cleared.")
+        self.loggercmd.setText("")
 
     def logs_save_command(self, widget):
         # ------------------- #
@@ -751,7 +787,7 @@ class DobotMenu(QWidget):
             with open(self.log_path + '/' + self.log_file, 'w') as file:
                 file.write(logs)
         except Exception as e:
-            pass
+            self.write_logs(f"Error saving file: {e}")
 
     def logs_load_command(self, widget):
         # ---------------------- #
@@ -761,9 +797,17 @@ class DobotMenu(QWidget):
         try:
             with open(self.log_path + '/' + self.log_file, 'r') as file:
                 logs = file.read()
-                widget.setText(logs) # self.programmingLineEditCode
+                widget.setText(logs) # self.scriptingLineEditCode
         except Exception as e:
-            widget.append(f"Error loading file: {e}")
+            self.write_logs(f"Error loading file: {e}")
+    
+    def move_logs(self, msg):
+        #self._node.get_logger().info(f"{msg}")
+        #self._node.get_logger().info(f"{msg.current_pose}")
+        #self.write_logs(f"{msg.current_pois}")
+        #self.write_logs(f"{self.dobotPose}")
+        self.write_logs(f"{self.dobotPose[0]}\t{self.dobotPose[1]}\t{self.dobotPose[2]}\t{self.dobotPose[3]}\t\t{self.dobotJoints[0]}\t{self.dobotJoints[1]}\t{self.dobotJoints[2]}\t{self.dobotJoints[3]}")
+        #self.write_logs(f"{msg.current_pose[0]}, {msg.current_pose[1]}, {msg.current_pose[2]}, {msg.current_pose[3]}")
 
     def action_logs(self, msg):
         # Reformat alarm codes into bracket array
@@ -823,7 +867,7 @@ class DobotMenu(QWidget):
 
 
     def open_gripper(self):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "open", keep_compressor_running: false}"'
             subprocess.Popen(
                         command, universal_newlines=True, shell=True,
@@ -832,7 +876,7 @@ class DobotMenu(QWidget):
             self.send_gripper_state("opened")
  
     def close_gripper(self):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             command = 'ros2 service call /dobot_gripper_service dobot_msgs/srv/GripperControl "{gripper_state: "close", keep_compressor_running: false}"'
             subprocess.Popen(
                         command, universal_newlines=True, shell=True,
@@ -842,14 +886,14 @@ class DobotMenu(QWidget):
 
 
     def turn_on_suction_cup(self):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: true}"'
             subprocess.Popen(
                 command, universal_newlines=True, shell=True,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
     def turn_off_suction_cup(self):
-        if self.is_connected:
+        if self.is_connected and self.current_process.poll() is not None:
             command = 'ros2 service call /dobot_suction_cup_service dobot_msgs/srv/SuctionCupControl "{enable_suction: false}"'
             subprocess.Popen(
                 command, universal_newlines=True, shell=True,

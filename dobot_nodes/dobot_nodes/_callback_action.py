@@ -55,6 +55,7 @@ def execute_callback_action(self, goal_handle, result, feedback_msg):
     # Execute a goal.
     self.get_logger().info('Executing goal...')
 
+    start = time.time()
     # Start executing the action
     while not (is_goal_reached(self.target, self.dobot_pose, 0.5) and is_pose_stable(self.pose_arr)):
         if goal_handle.is_cancel_requested:
@@ -72,13 +73,16 @@ def execute_callback_action(self, goal_handle, result, feedback_msg):
         self.pose_arr.append(self.dobot_pose)
 
         self.get_logger().info('Publishing feedback: {0}'.format(feedback_msg.current_pose))
-        #self.get_logger().info('Publishing feedback: {0}'.format(self.target))
+
         # Publish the feedback
         goal_handle.publish_feedback(feedback_msg)
 
         # Sleep for demonstration purposes
-        time.sleep(0.1)
+        #time.sleep(0.1)
 
+    end = time.time()
+    length = end - start
+    self.get_logger().info(f'It took {length} seconds!')
 
     goal_handle.succeed()
 
@@ -89,6 +93,6 @@ def execute_callback_action(self, goal_handle, result, feedback_msg):
     return
     
 def cancel_callback_action(self, goal_handle):
-    # Accept or reject a client request to cancel an action.
+    # Request to cancel an action.
     self.get_logger().info('Received cancel request')
     return CancelResponse.ACCEPT
